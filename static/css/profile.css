@@ -1,0 +1,235 @@
+/* Profile Styles */
+.profile-container {
+    min-height: calc(100vh - 200px);
+    padding: 40px 0;
+    background: var(--bg-gray);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.profile-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+/* Profile Grid Layout */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Profile Picture Section */
+.profile-picture-section {
+    background: var(--bg-light);
+    padding: 40px 30px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.profile-picture {
+    margin-bottom: 20px;
+}
+
+.avatar-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--bg-gray);
+    margin: 0 auto 20px;
+    border: 3px solid var(--primary-red);
+}
+
+.profile-name {
+    text-align: left;
+    padding: 20px 0;
+}
+
+.profile-name p {
+    margin: 10px 0;
+    color: var(--text-dark);
+}
+
+/* Profile Info Section */
+.profile-info-section {
+    background: var(--bg-light);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.profile-info-section h2 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.profile-info-section h3 {
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    margin: 30px 0 20px 0;
+}
+
+/* Form Grid Layouts */
+.form-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Section Boxes */
+.section-box {
+    background: var(--bg-light);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
+
+.section-box h2 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+}
+
+.section-note {
+    color: var(--text-gray);
+    font-style: italic;
+}
+
+/* Simple Profile Card (for Admin/Applicant) */
+.simple-profile-card {
+    background: var(--bg-light);
+    padding: 50px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.simple-profile-card h2 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.profile-info-simple .form-group {
+    margin-bottom: 25px;
+}
+
+.profile-info-simple label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.profile-info-simple p {
+    color: var(--text-gray);
+    font-size: 1.1rem;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* Role & Status Badges */
+.role-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.role-admin {
+    background: #dc3545;
+    color: white;
+}
+
+.role-employee {
+    background: #0d6efd;
+    color: white;
+}
+
+.role-applicant {
+    background: #6c757d;
+    color: white;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.status-pending {
+    background: #ffc107;
+    color: #000;
+}
+
+.status-approved {
+    background: #28a745;
+    color: white;
+}
+
+.status-rejected {
+    background: #dc3545;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid-3col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .form-grid-2col,
+    .form-grid-3col {
+        grid-template-columns: 1fr;
+    }
+
+    .simple-profile-card {
+        padding: 30px 20px;
+    }
+
+    .profile-info-section {
+        padding: 25px 20px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
