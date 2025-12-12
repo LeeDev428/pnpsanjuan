@@ -1,0 +1,340 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Deployment Management - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="deployment-container">
+    <div class="deployment-header">
+        <h1><i class="fas fa-map-marker-alt"></i> Deployment Management</h1>
+        <p>Manage officer deployments and assignments</p>
+    </div>
+
+    <div class="deployment-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by officer name or station..." onkeyup="searchDeployments()">
+        </div>
+        <div class="filter-group">
+            <label><i class="fas fa-filter"></i> Status:</label>
+            <select id="statusFilter" onchange="filterDeployments()">
+                <option value="all">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <button class="btn-add" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> New Deployment
+        </button>
+    </div>
+
+    <div class="deployment-content">
+        <div class="table-container">
+            <table class="deployment-table">
+                <thead>
+                    <tr>
+                        <th>Officer Name</th>
+                        <th>Rank</th>
+                        <th>Station</th>
+                        <th>Unit</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="deploymentsTable">
+                    {% for deployment in deployments %}
+                    <tr>
+                        <td>{{ deployment.officer_name or 'N/A' }}</td>
+                        <td>{{ deployment.rank or 'N/A' }}</td>
+                        <td>{{ deployment.station }}</td>
+                        <td>{{ deployment.unit or 'N/A' }}</td>
+                        <td>{{ deployment.start_date.strftime('%b %d, %Y') if deployment.start_date else 'N/A' }}</td>
+                        <td>{{ deployment.end_date.strftime('%b %d, %Y') if deployment.end_date else 'Ongoing' }}</td>
+                        <td>
+                            <span class="status-badge status-{{ deployment.status|lower }}">
+                                {{ deployment.status }}
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn-action btn-view" onclick="viewDeployment({{ deployment.id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-edit" onclick="editDeployment({{ deployment.id }})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-delete" onclick="confirmDelete({{ deployment.id }})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="no-data">No deployments found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('admin.deployment', page=page-1) }}" class="page-btn">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <a href="{{ url_for('admin.deployment', page=p) }}" class="page-btn">{{ p }}</a>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <span class="page-btn disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <a href="{{ url_for('admin.deployment', page=page+1) }}" class="page-btn">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Deployment Modal -->
+<div id="deploymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-map-marker-alt"></i> <span id="modalTitle">Add Deployment</span></h2>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        <form id="deploymentForm">
+            <input type="hidden" id="deployment_id" name="deployment_id">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="employee_id">Select Officer *</label>
+                    <select id="employee_id" name="employee_id" required>
+                        <option value="">Choose an officer...</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.user_id }}">
+                            {{ employee.full_name }} ({{ employee.rank or 'N/A' }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status *</label>
+                    <select id="status" name="status" required>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="station">Station *</label>
+                    <input type="text" id="station" name="station" required placeholder="e.g., PNP San Juan Station">
+                </div>
+                <div class="form-group">
+                    <label for="unit">Unit</label>
+                    <input type="text" id="unit" name="unit" placeholder="e.g., Investigation Unit">
+                </div>
+                <div class="form-group">
+                    <label for="position">Position</label>
+                    <input type="text" id="position" name="position" placeholder="e.g., Desk Officer">
+                </div>
+                <div class="form-group">
+                    <label for="start_date">Start Date *</label>
+                    <input type="date" id="start_date" name="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date">
+                </div>
+                <div class="form-group full-width">
+                    <label for="remarks">Remarks</label>
+                    <textarea id="remarks" name="remarks" rows="3" placeholder="Optional notes or comments..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Save Deployment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Deployment Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> Deployment Details</h2>
+            <span class="modal-close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="view-content" id="viewContent"></div>
+    </div>
+</div>
+
+<script>
+function searchDeployments() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('deploymentsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const text = rows[i].textContent.toLowerCase();
+        rows[i].style.display = text.indexOf(filter) > -1 ? '' : 'none';
+    }
+}
+
+function filterDeployments() {
+    const filter = document.getElementById('statusFilter').value;
+    const table = document.getElementById('deploymentsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const statusBadge = rows[i].querySelector('.status-badge');
+        if (!statusBadge) continue;
+        
+        const status = statusBadge.textContent.trim();
+        rows[i].style.display = (filter === 'all' || status === filter) ? '' : 'none';
+    }
+}
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Deployment';
+    document.getElementById('deploymentForm').reset();
+    document.getElementById('deployment_id').value = '';
+    document.getElementById('deploymentModal').style.display = 'flex';
+}
+
+function editDeployment(id) {
+    fetch(`/admin/deployment/${id}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const d = data.deployment;
+                document.getElementById('modalTitle').textContent = 'Edit Deployment';
+                document.getElementById('deployment_id').value = d.id;
+                document.getElementById('employee_id').value = d.employee_id;
+                document.getElementById('station').value = d.station;
+                document.getElementById('unit').value = d.unit || '';
+                document.getElementById('position').value = d.position || '';
+                document.getElementById('start_date').value = d.start_date;
+                document.getElementById('end_date').value = d.end_date || '';
+                document.getElementById('status').value = d.status;
+                document.getElementById('remarks').value = d.remarks || '';
+                document.getElementById('deploymentModal').style.display = 'flex';
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+}
+
+function viewDeployment(id) {
+    fetch(`/admin/deployment/${id}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const d = data.deployment;
+                document.getElementById('viewContent').innerHTML = `
+                    <div class="detail-grid">
+                        <div class="detail-row">
+                            <label>Officer Name</label>
+                            <span>${d.officer_name || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Rank</label>
+                            <span>${d.rank || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Station</label>
+                            <span>${d.station}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Unit</label>
+                            <span>${d.unit || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Position</label>
+                            <span>${d.position || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Start Date</label>
+                            <span>${d.start_date_formatted}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>End Date</label>
+                            <span>${d.end_date_formatted || 'Ongoing'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Status</label>
+                            <span class="status-badge status-${d.status.toLowerCase()}">${d.status}</span>
+                        </div>
+                        <div class="detail-row full-width">
+                            <label>Remarks</label>
+                            <span>${d.remarks || 'No remarks'}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('viewModal').style.display = 'flex';
+            }
+        });
+}
+
+function confirmDelete(id) {
+    if (confirm('Are you sure you want to delete this deployment?')) {
+        fetch(`/admin/deployment/${id}/delete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    }
+}
+
+function closeModal() {
+    document.getElementById('deploymentModal').style.display = 'none';
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+document.getElementById('deploymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const deploymentId = document.getElementById('deployment_id').value;
+    const url = deploymentId ? '/admin/deployment/edit' : '/admin/deployment/add';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    });
+});
+
+window.onclick = function(event) {
+    const modal = document.getElementById('deploymentModal');
+    const viewModal = document.getElementById('viewModal');
+    if (event.target === modal) closeModal();
+    if (event.target === viewModal) closeViewModal();
+}
+</script>
+{% endblock %}
