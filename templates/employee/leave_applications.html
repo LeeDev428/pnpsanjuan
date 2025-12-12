@@ -137,8 +137,12 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn-submit">Submit Application</button>
+                <button type="button" class="btn-cancel" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Submit Application
+                </button>
             </div>
         </form>
     </div>
@@ -336,8 +340,122 @@ window.onclick = function(event) {
 .leave-table td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; }
 .leave-table tbody tr:hover { background: #f9f9f9; }
 .leave-table .no-data { text-align: center; padding: 40px; color: #999; font-style: italic; }
+
 /* Fix modal display on page load */
 .modal { display: none !important; }
 .modal[style*="display: flex"] { display: flex !important; }
+
+/* Enhanced Dropdown Styling */
+.filter-group select,
+#statusFilter {
+    padding: 10px 35px 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+
+.filter-group select:hover,
+#statusFilter:hover {
+    border-color: var(--primary-red);
+    box-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
+}
+
+.filter-group select:focus,
+#statusFilter:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Enhanced Button Styling */
+.btn-cancel,
+.btn-submit {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.btn-cancel:hover {
+    background: #e8e8e8;
+    border-color: #d0d0d0;
+    transform: translateY(-1px);
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    color: white;
+    box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220, 20, 60, 0.4);
+}
+
+.btn-submit:active {
+    transform: translateY(0);
+}
+
+.modal-actions {
+    padding: 20px 25px;
+    border-top: 2px solid #f0f0f0;
+    background: #fafafa;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Form Input Enhancements */
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select {
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="date"]:hover,
+.form-group input[type="number"]:hover,
+.form-group select:hover {
+    border-color: #bbb;
+}
 </style>
 {% endblock %}
