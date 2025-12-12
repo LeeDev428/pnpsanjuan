@@ -63,9 +63,10 @@
 }
 
 .sidebar-link .icon {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     width: 24px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 /* Main Content */
