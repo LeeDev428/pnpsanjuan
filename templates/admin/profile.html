@@ -11,15 +11,44 @@
     <h1>Admin Profile</h1>
 </div>
 
-<div class="simple-profile-card">
+<form method="POST" enctype="multipart/form-data" class="simple-profile-card">
+    <div class="profile-picture-upload">
+        {% if profile and profile.profile_picture %}
+            <img src="{{ url_for('static', filename=profile.profile_picture) }}" alt="Profile Picture" class="avatar-circle">
+        {% else %}
+            <div class="avatar-circle"></div>
+        {% endif %}
+        <div class="form-group">
+            <label for="profile_picture">Change Profile Picture</label>
+            <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+            <small>Allowed: PNG, JPG, JPEG, GIF (Max 16MB)</small>
+        </div>
+    </div>
+    
     <div class="profile-info-simple">
         <div class="form-group">
             <label>Username:</label>
             <p>{{ user.username }}</p>
         </div>
         <div class="form-group">
-            <label>Email:</label>
-            <p>{{ user.email }}</p>
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" value="{{ profile.first_name if profile else '' }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="middle_name">Middle Name:</label>
+            <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name if profile else '' }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" value="{{ profile.last_name if profile else '' }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ profile.email if profile else user.email }}" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" name="phone" value="{{ profile.phone if profile else '' }}" class="form-control">
         </div>
         <div class="form-group">
             <label>Role:</label>
@@ -32,7 +61,8 @@
     </div>
     
     <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large">Save Changes</button>
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-large">Back to Dashboard</a>
     </div>
-</div>
+</form>
 {% endblock %}
