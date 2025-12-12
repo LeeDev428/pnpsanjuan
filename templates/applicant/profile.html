@@ -11,8 +11,21 @@
     <h1>Applicant Profile</h1>
 </div>
 
-<form method="POST" class="profile-form">
+<form method="POST" enctype="multipart/form-data" class="profile-form">
     <div class="simple-profile-card">
+        <div class="profile-picture-upload">
+            {% if profile and profile.profile_picture %}
+                <img src="{{ url_for('static', filename=profile.profile_picture) }}" alt="Profile Picture" class="avatar-circle">
+            {% else %}
+                <div class="avatar-circle"></div>
+            {% endif %}
+            <div class="form-group">
+                <label for="profile_picture">Change Profile Picture</label>
+                <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+                <small>Allowed: PNG, JPG, JPEG, GIF (Max 16MB)</small>
+            </div>
+        </div>
+        
         <h2>Personal Information</h2>
         
         <div class="form-grid-2col">
