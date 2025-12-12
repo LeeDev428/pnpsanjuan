@@ -1,0 +1,402 @@
+{% extends "employee/base.html" %}
+
+{% block title %}Personal Records - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="records-container">
+    <div class="records-header">
+        <h1><i class="fas fa-id-card"></i> Personal Records</h1>
+        <p>View your official employee information</p>
+    </div>
+
+    {% if employee %}
+    <div class="records-content">
+        <!-- Personal Information Section -->
+        <div class="record-section">
+            <h2><i class="fas fa-user"></i> Personal Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>First Name</label>
+                    <span>{{ employee.first_name or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Middle Name</label>
+                    <span>{{ employee.middle_name or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Last Name</label>
+                    <span>{{ employee.last_name or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Suffix</label>
+                    <span>{{ employee.suffix or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Gender</label>
+                    <span>{{ employee.gender or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Date of Birth</label>
+                    <span>{{ employee.date_of_birth.strftime('%B %d, %Y') if employee.date_of_birth else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Place of Birth</label>
+                    <span>{{ employee.place_of_birth or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Religion</label>
+                    <span>{{ employee.religion or 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Details Section -->
+        <div class="record-section">
+            <h2><i class="fas fa-briefcase"></i> Employment Details</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Rank</label>
+                    <span class="highlight-badge">{{ employee.rank or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Unit</label>
+                    <span>{{ employee.unit or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Station</label>
+                    <span>{{ employee.station or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Account Status</label>
+                    <span class="status-badge status-{{ employee.account_status }}">
+                        {{ employee.account_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="record-section">
+            <h2><i class="fas fa-phone"></i> Contact Information</h2>
+            <div class="info-grid">
+                <div class="info-item full-width">
+                    <label>Home Address</label>
+                    <span>{{ employee.home_address or 'N/A' }}</span>
+                </div>
+                <div class="info-item full-width">
+                    <label>Current Address</label>
+                    <span>{{ employee.address or 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact Section -->
+        <div class="record-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> Emergency Contact</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Contact Name</label>
+                    <span>{{ employee.emergency_contact_name or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Relationship</label>
+                    <span>{{ employee.emergency_relationship or 'N/A' }}</span>
+                </div>
+                <div class="info-item full-width">
+                    <label>Contact Number</label>
+                    <span>{{ employee.emergency_contact_number or 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Background Section -->
+        {% if education %}
+        <div class="record-section">
+            <h2><i class="fas fa-graduation-cap"></i> Educational Background</h2>
+            <div class="education-list">
+                {% for edu in education %}
+                <div class="education-item">
+                    <div class="edu-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <div class="edu-info">
+                        <h4>{{ edu.level }}</h4>
+                        <p><strong>{{ edu.school_name }}</strong></p>
+                        <p class="year">Graduated: {{ edu.year_graduated or 'In Progress' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Current Deployment Section -->
+        {% if deployment %}
+        <div class="record-section">
+            <h2><i class="fas fa-map-marker-alt"></i> Current Deployment</h2>
+            <div class="deployment-card">
+                <div class="deployment-info">
+                    <div class="info-row">
+                        <label>Station:</label>
+                        <span>{{ deployment.station }}</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Unit:</label>
+                        <span>{{ deployment.unit or 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Position:</label>
+                        <span>{{ deployment.position or 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Start Date:</label>
+                        <span>{{ deployment.start_date.strftime('%B %d, %Y') if deployment.start_date else 'N/A' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Status:</label>
+                        <span class="status-badge status-{{ deployment.status|lower }}">{{ deployment.status }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="record-footer">
+            <p><i class="fas fa-info-circle"></i> If you notice any discrepancies in your records, please contact your administrator.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <i class="fas fa-inbox"></i>
+        <h2>No Records Found</h2>
+        <p>Your employee profile information is not available at this time.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.records-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.records-header {
+    margin-bottom: 30px;
+}
+
+.records-header h1 {
+    font-size: 28px;
+    color: var(--primary-red);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.records-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+.records-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.record-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 25px;
+}
+
+.record-section h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-red);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-item label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.info-item span {
+    font-size: 15px;
+    color: #333;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.highlight-badge {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red)) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.education-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.education-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-red);
+}
+
+.edu-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.edu-icon i {
+    font-size: 22px;
+    color: white;
+}
+
+.edu-info h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.edu-info p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.edu-info .year {
+    font-size: 13px;
+    color: #999;
+}
+
+.deployment-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid var(--primary-red);
+}
+
+.deployment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+}
+
+.info-row label {
+    font-weight: 600;
+    color: #666;
+    font-size: 14px;
+}
+
+.info-row span {
+    color: #333;
+    font-size: 14px;
+}
+
+.record-footer {
+    background: #FFF3CD;
+    border-left: 4px solid #856404;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.record-footer p {
+    font-size: 14px;
+    color: #856404;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.no-data {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.no-data i {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.no-data h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.no-data p {
+    font-size: 15px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .education-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
