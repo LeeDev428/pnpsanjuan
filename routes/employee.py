@@ -31,8 +31,8 @@ def profile():
         station = request.form.get('station')
         address = request.form.get('address')
         home_address = request.form.get('home_address')
-        gender = request.form.get('gender')
-        date_of_birth = request.form.get('date_of_birth')
+        gender = request.form.get('gender') or None  # Convert empty string to None
+        date_of_birth = request.form.get('date_of_birth') or None
         place_of_birth = request.form.get('place_of_birth')
         religion = request.form.get('religion')
         emergency_contact_name = request.form.get('emergency_contact_name')
