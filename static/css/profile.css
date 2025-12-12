@@ -105,6 +105,80 @@
 .profile-info-section h2 {
     font-size: 1.5rem;
     color: var(--text-dark);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-red);
+}
+
+.profile-info-section h3 {
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    margin: 32px 0 20px;
+    font-weight: 600;
+}
+
+/* 2-Column Vertical Layout */
+.form-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 30px;
+}
+
+.info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-row.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-row label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    padding: 12px 16px;
+    background: var(--bg-gray);
+    border-radius: 8px;
+    color: var(--text-dark);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.info-row input[type="text"],
+.info-row input[type="email"],
+.info-row input[type="date"],
+.info-row select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.info-row input:focus,
+.info-row select:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+}
+
+/* Old 3-column grid - keeping for backwards compatibility */
+.form-grid-3col {
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.profile-info-section h2 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
     margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 2px solid var(--border-color);
