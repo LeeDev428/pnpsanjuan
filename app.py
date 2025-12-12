@@ -1,9 +1,19 @@
 from flask import Flask, render_template
 from config import DB_CONFIG
 import mysql.connector
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
+
+# Configure file uploads
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Import blueprints
 from routes.auth import auth_bp
@@ -71,8 +81,24 @@ def init_db():
             email VARCHAR(100),
             phone VARCHAR(20),
             address VARCHAR(255),
+            profile_picture VARCHAR(255),
             application_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
             applied_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Create admin profiles table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admin_profiles (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT UNIQUE NOT NULL,
+            first_name VARCHAR(100),
+            middle_name VARCHAR(100),
+            last_name VARCHAR(100),
+            email VARCHAR(100),
+            phone VARCHAR(20),
+            profile_picture VARCHAR(255),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
