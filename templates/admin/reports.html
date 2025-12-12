@@ -1,0 +1,309 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Generate Reports - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <div class="reports-header">
+        <h1><i class="fas fa-file-alt"></i> Generate Reports</h1>
+        <p>Export data and generate system reports</p>
+    </div>
+
+    <div class="reports-grid">
+        <!-- Users Report Card -->
+        <div class="report-card">
+            <div class="report-icon" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="report-info">
+                <h3>Users Report</h3>
+                <p>Export all users data including admins, employees, and applicants</p>
+                <div class="report-stats">
+                    <span><i class="fas fa-user-shield"></i> {{ admin_count }} Admins</span>
+                    <span><i class="fas fa-user-tie"></i> {{ employee_count }} Employees</span>
+                    <span><i class="fas fa-user-clock"></i> {{ applicant_count }} Applicants</span>
+                </div>
+            </div>
+            <div class="report-actions">
+                <a href="{{ url_for('admin.export_users') }}" class="btn-export">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Deployments Report Card -->
+        <div class="report-card">
+            <div class="report-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="report-info">
+                <h3>Deployments Report</h3>
+                <p>Export deployment history and current assignments</p>
+                <div class="report-stats">
+                    <span><i class="fas fa-circle" style="color: #27ae60;"></i> {{ active_deployments }} Active</span>
+                    <span><i class="fas fa-circle" style="color: #95a5a6;"></i> {{ completed_deployments }} Completed</span>
+                </div>
+            </div>
+            <div class="report-actions">
+                <a href="{{ url_for('admin.export_deployments') }}" class="btn-export">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Applicants Report Card -->
+        <div class="report-card">
+            <div class="report-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="report-info">
+                <h3>Applicants Report</h3>
+                <p>Export applicant data with application status</p>
+                <div class="report-stats">
+                    <span><i class="fas fa-clock"></i> {{ pending_applicants }} Pending</span>
+                    <span><i class="fas fa-check"></i> {{ approved_applicants }} Approved</span>
+                    <span><i class="fas fa-times"></i> {{ rejected_applicants }} Rejected</span>
+                </div>
+            </div>
+            <div class="report-actions">
+                <a href="{{ url_for('admin.export_applicants') }}" class="btn-export">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Leave Applications Report Card -->
+        <div class="report-card">
+            <div class="report-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="report-info">
+                <h3>Leave Applications Report</h3>
+                <p>Export leave applications and approval history</p>
+                <div class="report-stats">
+                    <span><i class="fas fa-clock"></i> {{ pending_leaves }} Pending</span>
+                    <span><i class="fas fa-check"></i> {{ approved_leaves }} Approved</span>
+                </div>
+            </div>
+            <div class="report-actions">
+                <a href="{{ url_for('admin.export_leaves') }}" class="btn-export">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Custom Date Range Report -->
+        <div class="report-card full-width">
+            <div class="report-icon" style="background: linear-gradient(135deg, #1abc9c, #16a085);">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="report-info">
+                <h3>Custom Date Range Report</h3>
+                <p>Generate reports for a specific date range</p>
+            </div>
+            <form action="{{ url_for('admin.export_custom') }}" method="get" class="date-range-form">
+                <div class="form-group">
+                    <label for="report_type">Report Type</label>
+                    <select name="report_type" id="report_type" required>
+                        <option value="users">Users</option>
+                        <option value="deployments">Deployments</option>
+                        <option value="applicants">Applicants</option>
+                        <option value="leaves">Leave Applications</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" name="end_date" id="end_date" required>
+                </div>
+                <button type="submit" class="btn-export">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.reports-container {
+    padding: 20px;
+}
+
+.reports-header {
+    margin-bottom: 30px;
+}
+
+.reports-header h1 {
+    font-size: 28px;
+    color: var(--primary-red);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reports-header p {
+    color: #666;
+    font-size: 14px;
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+}
+
+.report-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 25px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+.report-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.report-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.report-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.report-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.report-info {
+    flex: 1;
+}
+
+.report-info h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.report-info p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.report-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.report-stats span {
+    font-size: 13px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.report-stats i {
+    font-size: 12px;
+}
+
+.report-actions {
+    display: flex;
+    align-items: center;
+}
+
+.btn-export {
+    padding: 10px 20px;
+    background: var(--primary-red);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-export:hover {
+    background: var(--dark-red);
+    transform: translateY(-2px);
+}
+
+.date-range-form {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.date-range-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.date-range-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+}
+
+.date-range-form input,
+.date-range-form select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.date-range-form input:focus,
+.date-range-form select:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+@media (max-width: 768px) {
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-card {
+        flex-direction: column;
+    }
+    
+    .date-range-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-range-form .form-group {
+        min-width: 100%;
+    }
+}
+</style>
+{% endblock %}
