@@ -1,0 +1,38 @@
+<nav class="navbar">
+    <div class="container">
+        <div class="logo">
+            <a href="{{ url_for('landing') }}">
+                <img src="{{ url_for('static', filename='images/pnpsanjaun.png') }}" alt="PNP San Juan">
+                <span>PNP San Juan</span>
+            </a>
+        </div>
+        <div class="nav-links">
+            {% if session.get('username') %}
+                <div class="profile-dropdown">
+                    <button class="profile-btn">
+                        <span class="user-icon">👤</span>
+                        <span>{{ session['username'] }}</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        {% if session['role'] == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('admin.profile') }}">Profile</a>
+                        {% elif session['role'] == 'employee' %}
+                            <a href="{{ url_for('employee.dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('employee.profile') }}">Profile</a>
+                        {% elif session['role'] == 'applicant' %}
+                            <a href="{{ url_for('applicant.dashboard') }}">Dashboard</a>
+                            <a href="{{ url_for('applicant.profile') }}">Profile</a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
