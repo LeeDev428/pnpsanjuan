@@ -40,21 +40,26 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: #999;
+    color: #6c757d;
 }
 
 .search-box input {
     width: 100%;
-    padding: 12px 12px 12px 40px;
-    border: 1px solid #ddd;
+    padding: 11px 15px 11px 40px;
+    border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-box input:hover {
+    border-color: #bbb;
 }
 
 .search-box input:focus {
     outline: none;
     border-color: var(--primary-red);
-    box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+    box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15);
 }
 
 .filter-group {
@@ -65,24 +70,45 @@
 
 .filter-group label {
     font-size: 14px;
-    color: #666;
+    font-weight: 600;
+    color: #555;
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
 }
 
-.filter-group select {
-    padding: 10px 14px;
-    border: 1px solid #ddd;
+.filter-group select,
+#statusFilter {
+    padding: 10px 35px 10px 15px;
+    border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
-    cursor: pointer;
+    color: #333;
     background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    min-width: 150px;
 }
 
-.filter-group select:focus {
+.filter-group select:hover,
+#statusFilter:hover {
+    border-color: var(--primary-red);
+    box-shadow: 0 2px 8px rgba(220, 20, 60, 0.1);
+}
+
+.filter-group select:focus,
+#statusFilter:focus {
     outline: none;
     border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.15);
 }
 
 .recruitment-content {
