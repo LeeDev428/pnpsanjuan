@@ -7,9 +7,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Hidden flash messages for toast -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert-message" data-category="{{ category }}" style="display:none;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <!-- Top Navbar -->
     <nav class="navbar">
         <div class="container-fluid">
@@ -22,16 +34,16 @@
             <div class="nav-links">
                 <div class="profile-dropdown">
                     <button class="profile-btn">
-                        <span class="user-icon">👤</span>
+                        <i class="fas fa-user user-icon"></i>
                         <span>{{ session['username'] }}</span>
                         <span class="role-badge-small role-applicant">Applicant</span>
-                        <span class="dropdown-arrow">▼</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <a href="{{ url_for('applicant.dashboard') }}">Dashboard</a>
-                        <a href="{{ url_for('applicant.profile') }}">My Profile</a>
+                        <a href="{{ url_for('applicant.dashboard') }}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                        <a href="{{ url_for('applicant.profile') }}"><i class="fas fa-user"></i> My Profile</a>
                         <div class="dropdown-divider"></div>
-                        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             </div>
@@ -46,27 +58,27 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('applicant.dashboard') }}" class="sidebar-link {% if request.endpoint == 'applicant.dashboard' %}active{% endif %}">
-                    <span class="icon">📊</span>
+                    <i class="fas fa-chart-line icon"></i>
                     <span>Dashboard</span>
                 </a>
                 <a href="{{ url_for('applicant.profile') }}" class="sidebar-link {% if request.endpoint == 'applicant.profile' %}active{% endif %}">
-                    <span class="icon">👤</span>
+                    <i class="fas fa-user icon"></i>
                     <span>My Profile</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <span class="icon">📋</span>
+                    <i class="fas fa-clipboard-check icon"></i>
                     <span>Application Status</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <span class="icon">📄</span>
+                    <i class="fas fa-file-alt icon"></i>
                     <span>Documents</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <span class="icon">ℹ️</span>
+                    <i class="fas fa-list-ul icon"></i>
                     <span>Requirements</span>
                 </a>
                 <a href="#" class="sidebar-link">
-                    <span class="icon">📞</span>
+                    <i class="fas fa-headset icon"></i>
                     <span>Contact Support</span>
                 </a>
             </nav>
@@ -74,20 +86,11 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="alerts-container">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-
             {% block content %}{% endblock %}
         </main>
     </div>
 
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
