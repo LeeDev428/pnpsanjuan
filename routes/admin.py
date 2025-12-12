@@ -184,14 +184,18 @@ def get_user(user_id):
     # Get profile data based on role
     profile = None
     if user['role'] == 'employee':
-        cursor.execute('SELECT * FROM employee_profiles WHERE user_id = %s', (user_id,))
+        cursor.execute('SELECT *, profile_picture FROM employee_profiles WHERE user_id = %s', (user_id,))
         profile = cursor.fetchone()
     elif user['role'] == 'applicant':
-        cursor.execute('SELECT * FROM applicant_profiles WHERE user_id = %s', (user_id,))
+        cursor.execute('SELECT *, profile_picture FROM applicant_profiles WHERE user_id = %s', (user_id,))
         profile = cursor.fetchone()
     elif user['role'] == 'admin':
-        cursor.execute('SELECT * FROM admin_profiles WHERE user_id = %s', (user_id,))
+        cursor.execute('SELECT *, profile_picture FROM admin_profiles WHERE user_id = %s', (user_id,))
         profile = cursor.fetchone()
+    
+    # Add profile_picture to user object if available
+    if profile and profile.get('profile_picture'):
+        user['profile_picture'] = profile['profile_picture']
     
     cursor.close()
     conn.close()
