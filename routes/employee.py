@@ -114,3 +114,233 @@ def profile():
     conn.close()
     
     return render_template('employee/profile.html', user=user, profile=profile)
+
+@employee_bp.route('/personal-records')
+@login_required
+@role_required('employee')
+def personal_records():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get profile for nav
+    cursor.execute('SELECT profile_picture FROM employee_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Get employee full details
+    cursor.execute('''
+        SELECT ep.*, u.status as account_status
+        FROM employee_profiles ep
+        JOIN users u ON ep.user_id = u.id
+        WHERE ep.user_id = %s
+    ''', (session['user_id'],))
+    employee = cursor.fetchone()
+    
+    # Get education history
+    cursor.execute('''
+        SELECT * FROM education
+        WHERE user_id = %s
+        ORDER BY year_graduated DESC
+    ''', (session['user_id'],))
+    education = cursor.fetchall()
+    
+    # Get current deployment
+    cursor.execute('''
+        SELECT * FROM deployments
+        WHERE employee_id = %s AND status = 'Active'
+        ORDER BY start_date DESC
+        LIMIT 1
+    ''', (session['user_id'],))
+    deployment = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('employee/personal_records.html',
+                         profile=profile,
+                         employee=employee,
+                         education=education,
+                         deployment=deployment)
+
+@employee_bp.route('/leave-applications')
+@login_required
+@role_required('employee')
+def leave_applications():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get profile for nav
+    cursor.execute('SELECT profile_picture FROM employee_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    # Get leave applications
+    cursor.execute('''
+        SELECT * FROM leave_applications
+        WHERE employee_id = %s
+        ORDER BY applied_date DESC
+        LIMIT %s OFFSET %s
+    ''', (session['user_id'], per_page, offset))
+    leaves = cursor.fetchall()
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM leave_applications WHERE employee_id = %s', (session['user_id'],))
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('employee/leave_applications.html',
+                         leaves=leaves,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         profile=profile)
+
+@employee_bp.route('/leave/add', methods=['POST'])
+@login_required
+@role_required('employee')
+def add_leave():
+    leave_type = request.form.get('leave_type')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    days_count = request.form.get('days_count')
+    reason = request.form.get('reason')
+    
+    if not all([leave_type, start_date, end_date, days_count, reason]):
+        return {'success': False, 'message': 'All fields are required'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            INSERT INTO leave_applications (employee_id, leave_type, start_date, end_date, days_count, reason)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (session['user_id'], leave_type, start_date, end_date, days_count, reason))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Leave application submitted successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error submitting leave: {str(e)}'}
+
+@employee_bp.route('/leave/edit', methods=['POST'])
+@login_required
+@role_required('employee')
+def edit_leave():
+    leave_id = request.form.get('leave_id')
+    leave_type = request.form.get('leave_type')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    days_count = request.form.get('days_count')
+    reason = request.form.get('reason')
+    
+    if not all([leave_id, leave_type, start_date, end_date, days_count, reason]):
+        return {'success': False, 'message': 'All fields are required'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Only allow editing if status is Pending
+        cursor.execute('SELECT status FROM leave_applications WHERE id = %s AND employee_id = %s', (leave_id, session['user_id']))
+        leave = cursor.fetchone()
+        
+        if not leave:
+            cursor.close()
+            conn.close()
+            return {'success': False, 'message': 'Leave application not found'}
+        
+        if leave['status'] != 'Pending':
+            cursor.close()
+            conn.close()
+            return {'success': False, 'message': 'Cannot edit approved or rejected leave'}
+        
+        cursor.execute('''
+            UPDATE leave_applications
+            SET leave_type = %s, start_date = %s, end_date = %s, days_count = %s, reason = %s
+            WHERE id = %s AND employee_id = %s
+        ''', (leave_type, start_date, end_date, days_count, reason, leave_id, session['user_id']))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Leave application updated successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error updating leave: {str(e)}'}
+
+@employee_bp.route('/leave/<int:leave_id>/get')
+@login_required
+@role_required('employee')
+def get_leave(leave_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT *,
+               DATE_FORMAT(start_date, '%%b %%d, %%Y') as start_date_formatted,
+               DATE_FORMAT(end_date, '%%b %%d, %%Y') as end_date_formatted,
+               DATE_FORMAT(applied_date, '%%b %%d, %%Y') as applied_date_formatted
+        FROM leave_applications
+        WHERE id = %s AND employee_id = %s
+    ''', (leave_id, session['user_id']))
+    leave = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    if not leave:
+        return {'success': False, 'message': 'Leave application not found'}, 404
+    
+    return {'success': True, 'leave': leave}
+
+@employee_bp.route('/leave/<int:leave_id>/delete', methods=['POST'])
+@login_required
+@role_required('employee')
+def delete_leave(leave_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Only allow deletion if status is Pending
+        cursor.execute('SELECT status FROM leave_applications WHERE id = %s AND employee_id = %s', (leave_id, session['user_id']))
+        leave = cursor.fetchone()
+        
+        if not leave:
+            cursor.close()
+            conn.close()
+            return {'success': False, 'message': 'Leave application not found'}
+        
+        if leave['status'] != 'Pending':
+            cursor.close()
+            conn.close()
+            return {'success': False, 'message': 'Cannot cancel approved or rejected leave'}
+        
+        cursor.execute('DELETE FROM leave_applications WHERE id = %s AND employee_id = %s', (leave_id, session['user_id']))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Leave application cancelled successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error cancelling leave: {str(e)}'}
