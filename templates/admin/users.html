@@ -258,7 +258,31 @@
     </div>
 </div>
 
+<!-- Image Zoom Modal -->
+<div id="imageZoomModal" class="image-zoom-modal">
+    <span class="image-zoom-close" onclick="closeImageZoom()">&times;</span>
+    <img class="image-zoom-content" id="zoomedImage">
+    <div class="image-zoom-caption"></div>
+</div>
+
 <script>
+// Zoom image functionality
+function zoomImage(src) {
+    const modal = document.getElementById('imageZoomModal');
+    const img = document.getElementById('zoomedImage');
+    modal.style.display = 'flex';
+    img.src = src;
+    
+    // Prevent body scrolling when zoom modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageZoom() {
+    const modal = document.getElementById('imageZoomModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
 // Search users
 function searchUsers() {
     const searchValue = document.getElementById('searchInput').value.toLowerCase();
@@ -347,6 +371,25 @@ function viewUser(userId, role) {
                 
                 let content = `
                     <div class="user-detail-grid">
+                `;
+                
+                // Add profile picture if available
+                if (user.profile_picture) {
+                    content += `
+                        <div class="detail-row full-width profile-picture-section">
+                            <strong>Profile Picture:</strong>
+                            <div class="profile-picture-container">
+                                <img src="${user.profile_picture.startsWith('/') ? user.profile_picture : '/' + user.profile_picture}" 
+                                     alt="${user.username}" 
+                                     class="profile-picture-large"
+                                     onclick="zoomImage(this.src)">
+                                <p class="zoom-hint"><i class="fas fa-search-plus"></i> Click to zoom</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                content += `
                         <div class="detail-row">
                             <strong>Username:</strong>
                             <span>${user.username}</span>
@@ -489,12 +532,16 @@ document.getElementById('userForm').addEventListener('submit', function(e) {
 window.onclick = function(event) {
     const userModal = document.getElementById('userModal');
     const viewModal = document.getElementById('viewModal');
+    const imageZoomModal = document.getElementById('imageZoomModal');
     
     if (event.target === userModal) {
         closeUserModal();
     }
     if (event.target === viewModal) {
         closeViewModal();
+    }
+    if (event.target === imageZoomModal) {
+        closeImageZoom();
     }
 }
 </script>
