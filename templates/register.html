@@ -7,22 +7,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="logo">
-                <a href="{{ url_for('landing') }}">
-                    <img src="{{ url_for('static', filename='images/pnpsanjaun.png') }}" alt="PNP San Juan">
-                    <span>PNP San Juan</span>
-                </a>
-            </div>
-        </div>
-    </nav>
+    {% include 'partials/navbar.html' %}
 
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
                 <h2>Create Account</h2>
-                <p>Join PNP San Juan today</p>
+                <p>Be one of us! Serve the country, join the PNP!</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -58,15 +49,11 @@
             </form>
 
             <div class="auth-footer">
-                <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a></p>
             </div>
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 PNP San Juan. All rights reserved.</p>
-        </div>
-    </footer>
+    {% include 'partials/footer.html' %}
 </body>
 </html>
