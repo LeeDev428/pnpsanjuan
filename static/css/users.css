@@ -1,0 +1,329 @@
+/* User Management Styles */
+.users-header {
+    margin-bottom: 30px;
+}
+
+.users-header h1 {
+    font-size: 2rem;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.users-header p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Tabs */
+.tabs-container {
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.tab-btn i {
+    font-size: 1.1rem;
+}
+
+.tab-btn:hover {
+    color: var(--primary-red);
+    background: rgba(220, 20, 60, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--primary-red);
+    border-bottom-color: var(--primary-red);
+    font-weight: 600;
+}
+
+.count-badge {
+    background: var(--primary-red);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tab-btn.active .count-badge {
+    background: var(--dark-red);
+}
+
+/* Users Table */
+.users-content {
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.users-table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.users-table thead {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    color: white;
+}
+
+.users-table thead th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.users-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+    background-color: rgba(220, 20, 60, 0.05);
+}
+
+.users-table tbody td {
+    padding: 14px 16px;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+/* User Info in Table */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-red);
+}
+
+.table-avatar-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-color);
+    color: #999;
+}
+
+/* Badges */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-secondary {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-view {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-view:hover {
+    background: #1976d2;
+    color: white;
+}
+
+.btn-edit {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.btn-edit:hover {
+    background: #f57c00;
+    color: white;
+}
+
+.btn-delete {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-delete:hover {
+    background: #c62828;
+    color: white;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: #999;
+}
+
+.empty-state i {
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: #999;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #999;
+    font-style: italic;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-page {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-dark);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-page:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+    background: rgba(220, 20, 60, 0.05);
+}
+
+.btn-page.active {
+    background: var(--primary-red);
+    color: white;
+    border-color: var(--primary-red);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .users-table {
+        font-size: 0.85rem;
+    }
+
+    .users-table thead th,
+    .users-table tbody td {
+        padding: 10px 8px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .tabs {
+        overflow-x: auto;
+    }
+}
