@@ -1,0 +1,272 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Recruitment - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="recruitment-container">
+    <div class="recruitment-header">
+        <h1><i class="fas fa-users"></i> Recruitment Management</h1>
+        <p>View and manage applicant applications</p>
+    </div>
+
+    <div class="recruitment-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by name or email..." onkeyup="searchApplicants()">
+        </div>
+        <div class="filter-group">
+            <label><i class="fas fa-filter"></i> Status:</label>
+            <select id="statusFilter" onchange="filterApplicants()">
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="recruitment-content">
+        <div class="table-container">
+            <table class="recruitment-table">
+                <thead>
+                    <tr>
+                        <th>Applicant Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicantsTable">
+                    {% for applicant in applicants %}
+                    <tr>
+                        <td>{{ applicant.first_name or 'N/A' }} {{ applicant.middle_name or '' }} {{ applicant.last_name or '' }}</td>
+                        <td>{{ applicant.email or applicant.user_email }}</td>
+                        <td>{{ applicant.phone or 'N/A' }}</td>
+                        <td>{{ applicant.applied_date.strftime('%B %d, %Y') if applicant.applied_date else 'N/A' }}</td>
+                        <td>
+                            <span class="status-badge status-{{ applicant.application_status|lower }}">
+                                {{ applicant.application_status }}
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn-action btn-view" onclick="viewApplicant({{ applicant.user_id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-edit" onclick="updateStatus({{ applicant.user_id }}, '{{ applicant.application_status }}')" title="Update Status">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="no-data">No applicants found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('admin.recruitment', page=page-1) }}" class="page-btn">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <a href="{{ url_for('admin.recruitment', page=p) }}" class="page-btn">{{ p }}</a>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <span class="page-btn disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <a href="{{ url_for('admin.recruitment', page=page+1) }}" class="page-btn">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Applicant Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user"></i> Applicant Details</h2>
+            <span class="modal-close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="view-content" id="viewContent">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-clipboard-check"></i> Update Application Status</h2>
+            <span class="modal-close" onclick="closeStatusModal()">&times;</span>
+        </div>
+        <form id="statusForm">
+            <input type="hidden" id="applicant_id" name="applicant_id">
+            <div class="form-group">
+                <label for="status">Application Status</label>
+                <select id="status" name="status" required>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeStatusModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function searchApplicants() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('applicantsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                found = true;
+                break;
+            }
+        }
+        
+        rows[i].style.display = found ? '' : 'none';
+    }
+}
+
+function filterApplicants() {
+    const filter = document.getElementById('statusFilter').value;
+    const table = document.getElementById('applicantsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const statusBadge = rows[i].querySelector('.status-badge');
+        if (!statusBadge) continue;
+        
+        const status = statusBadge.textContent.trim();
+        rows[i].style.display = (filter === 'all' || status === filter) ? '' : 'none';
+    }
+}
+
+function viewApplicant(userId) {
+    fetch(`/admin/recruitment/${userId}/view`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const applicant = data.applicant;
+                document.getElementById('viewContent').innerHTML = `
+                    <div class="user-detail-grid">
+                        <div class="detail-row">
+                            <label>Full Name</label>
+                            <span>${applicant.first_name || 'N/A'} ${applicant.middle_name || ''} ${applicant.last_name || ''}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Email</label>
+                            <span>${applicant.email || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Phone</label>
+                            <span>${applicant.phone || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Date of Birth</label>
+                            <span>${applicant.date_of_birth || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Address</label>
+                            <span>${applicant.address || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Application Status</label>
+                            <span class="status-badge status-${applicant.application_status.toLowerCase()}">${applicant.application_status}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Applied Date</label>
+                            <span>${applicant.applied_date || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Account Status</label>
+                            <span class="status-badge status-${applicant.account_status}">${applicant.account_status}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('viewModal').style.display = 'flex';
+            } else {
+                showToast(data.message || 'Failed to load applicant details', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error loading applicant details', 'error');
+        });
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+function updateStatus(userId, currentStatus) {
+    document.getElementById('applicant_id').value = userId;
+    document.getElementById('status').value = currentStatus;
+    document.getElementById('statusModal').style.display = 'flex';
+}
+
+function closeStatusModal() {
+    document.getElementById('statusModal').style.display = 'none';
+    document.getElementById('statusForm').reset();
+}
+
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/recruitment/update-status', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeStatusModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Failed to update status', 'error');
+        }
+    })
+    .catch(error => {
+        showToast('Error updating status', 'error');
+    });
+});
+
+// Close modals on outside click
+window.onclick = function(event) {
+    const viewModal = document.getElementById('viewModal');
+    const statusModal = document.getElementById('statusModal');
+    if (event.target === viewModal) {
+        closeViewModal();
+    }
+    if (event.target === statusModal) {
+        closeStatusModal();
+    }
+}
+</script>
+{% endblock %}
