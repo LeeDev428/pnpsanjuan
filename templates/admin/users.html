@@ -1,0 +1,167 @@
+{% extends "admin/base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/users.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="users-header">
+    <h1>User Management</h1>
+    <p>Manage employees and applicants in the system</p>
+</div>
+
+<div class="tabs-container">
+    <div class="tabs">
+        <button class="tab-btn {% if tab == 'employees' %}active{% endif %}" onclick="window.location.href='{{ url_for('admin.users', tab='employees') }}'">
+            <i class="fas fa-user-tie"></i> Employees
+            {% if employee_count %}<span class="count-badge">{{ employee_count }}</span>{% endif %}
+        </button>
+        <button class="tab-btn {% if tab == 'applicants' %}active{% endif %}" onclick="window.location.href='{{ url_for('admin.users', tab='applicants') }}'">
+            <i class="fas fa-user-plus"></i> Applicants
+            {% if applicant_count %}<span class="count-badge">{{ applicant_count }}</span>{% endif %}
+        </button>
+    </div>
+</div>
+
+<div class="users-content">
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Full Name</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if users %}
+                    {% for user in users %}
+                    <tr>
+                        <td>#{{ user.id }}</td>
+                        <td>
+                            <div class="user-info">
+                                {% if user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="{{ user.username }}" class="table-avatar">
+                                {% else %}
+                                    <div class="table-avatar-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <span>{{ user.username }}</span>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if tab == 'employees' %}
+                                {{ user.first_name or '' }} {{ user.middle_name or '' }} {{ user.last_name or '' }}
+                            {% else %}
+                                {{ user.first_name or '' }} {{ user.last_name or '' }}
+                            {% endif %}
+                            {% if not user.first_name %}<span class="text-muted">Not set</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if tab == 'applicants' %}
+                                {% if user.application_status == 'Pending' %}
+                                    <span class="badge badge-warning">{{ user.application_status }}</span>
+                                {% elif user.application_status == 'Approved' %}
+                                    <span class="badge badge-success">{{ user.application_status }}</span>
+                                {% elif user.application_status == 'Rejected' %}
+                                    <span class="badge badge-danger">{{ user.application_status }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ user.application_status or 'N/A' }}</span>
+                                {% endif %}
+                            {% else %}
+                                {% if user.rank %}
+                                    <span class="badge badge-info">{{ user.rank }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">N/A</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" title="View Details" onclick="viewUser({{ user.id }}, '{{ tab }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" title="Edit User" onclick="editUser({{ user.id }}, '{{ tab }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" title="Delete User" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-users fa-3x"></i>
+                                <p>No {{ tab }} found</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing {{ (page - 1) * per_page + 1 }} to {{ min(page * per_page, total) }} of {{ total }} {{ tab }}
+        </div>
+        <div class="pagination-buttons">
+            {% if page > 1 %}
+                <a href="{{ url_for('admin.users', tab=tab, page=1) }}" class="btn-page">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="{{ url_for('admin.users', tab=tab, page=page-1) }}" class="btn-page">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            {% endif %}
+
+            {% for p in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+                <a href="{{ url_for('admin.users', tab=tab, page=p) }}" class="btn-page {% if p == page %}active{% endif %}">
+                    {{ p }}
+                </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+                <a href="{{ url_for('admin.users', tab=tab, page=page+1) }}" class="btn-page">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="{{ url_for('admin.users', tab=tab, page=total_pages) }}" class="btn-page">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function viewUser(userId, role) {
+    showToast('View user details (Coming soon)', 'info', 'User Details');
+}
+
+function editUser(userId, role) {
+    showToast('Edit user functionality (Coming soon)', 'info', 'Edit User');
+}
+
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"?`)) {
+        showToast('Delete user functionality (Coming soon)', 'warning', 'Delete User');
+    }
+}
+</script>
+{% endblock %}
