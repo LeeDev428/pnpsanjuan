@@ -48,6 +48,18 @@
     display: block;
 }
 
+/* Readonly Input Styles */
+.readonly-input {
+    background-color: #f5f5f5 !important;
+    cursor: not-allowed;
+    color: #666;
+}
+
+.readonly-input:focus {
+    outline: none;
+    border-color: var(--border-color);
+}
+
 .profile-name {
     text-align: left;
     padding: 20px 0;
