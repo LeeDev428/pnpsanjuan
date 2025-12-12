@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <h1>Admin Profile</h1>
+</div>
+
+<div class="simple-profile-card">
+    <div class="profile-info-simple">
+        <div class="form-group">
+            <label>Username:</label>
+            <p>{{ user.username }}</p>
+        </div>
+        <div class="form-group">
+            <label>Email:</label>
+            <p>{{ user.email }}</p>
+        </div>
+        <div class="form-group">
+            <label>Role:</label>
+            <p class="role-badge role-admin">Administrator</p>
+        </div>
+        <div class="form-group">
+            <label>Account Created:</label>
+            <p>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</p>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-large">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}
