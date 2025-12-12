@@ -44,6 +44,8 @@
     background: var(--bg-gray);
     margin: 0 auto 20px;
     border: 3px solid var(--primary-red);
+    object-fit: cover;
+    display: block;
 }
 
 .profile-name {
@@ -54,6 +56,30 @@
 .profile-name p {
     margin: 10px 0;
     color: var(--text-dark);
+}
+
+.profile-picture-section input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.profile-picture-section input[type="file"]:hover {
+    border-color: var(--primary-red);
+    background: var(--bg-light);
+}
+
+.profile-picture-section small {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-gray);
+    font-size: 0.75rem;
 }
 
 /* Profile Info Section */
@@ -120,6 +146,47 @@
     border: 1px solid var(--border-color);
     max-width: 800px;
     margin: 0 auto;
+}
+
+.profile-picture-upload {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.profile-picture-upload .avatar-circle {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+}
+
+.profile-picture-upload .form-group {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.profile-picture-upload input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-picture-upload input[type="file"]:hover {
+    border-color: var(--primary-red);
+    background: var(--bg-light);
+}
+
+.profile-picture-upload small {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-gray);
+    font-size: 0.85rem;
 }
 
 .simple-profile-card h2 {
