@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNP San Juan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/pnpsanjuan.png') }}" alt="PNP San Juan">
+                <span>PNP San Juan</span>
+            </div>
+            <div class="nav-links">
+                {% if session.get('username') %}
+                    <span class="welcome">Welcome, {{ session['username'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Welcome to PNP San Juan</h1>
+                <p>Your trusted partner in public safety and community service</p>
+                {% if not session.get('username') %}
+                    <div class="hero-buttons">
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">Get Started</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline btn-large">Sign In</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Security</h3>
+                    <p>Committed to keeping our community safe</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Community</h3>
+                    <p>Building stronger connections with residents</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Efficiency</h3>
+                    <p>Quick response and reliable service</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PNP San Juan. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
