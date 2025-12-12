@@ -215,6 +215,14 @@ body {
     font-size: 1.2rem;
 }
 
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-red);
+}
+
 .dropdown-arrow {
     font-size: 0.7rem;
     transition: transform 0.3s ease;
