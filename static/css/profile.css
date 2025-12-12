@@ -93,7 +93,7 @@
 
 /* Section Boxes */
 .section-box {
-    background: var(--bg-light);
+    background: #E9ECEF;
     padding: 40px;
     border-radius: 16px;
     border: 1px solid var(--border-color);
@@ -104,6 +104,7 @@
     font-size: 1.5rem;
     color: var(--text-dark);
     margin-bottom: 15px;
+    font-weight: 700;
 }
 
 .section-note {
