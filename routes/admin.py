@@ -618,3 +618,309 @@ def delete_deployment(deployment_id):
         conn.close()
         return {'success': False, 'message': f'Error deleting deployment: {str(e)}'}
 
+@admin_bp.route('/reports')
+@login_required
+@role_required('admin')
+def reports():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Get statistics
+    cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "admin"')
+    admin_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "employee"')
+    employee_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "applicant"')
+    applicant_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM deployments WHERE status = "Active"')
+    active_deployments = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM deployments WHERE status = "Completed"')
+    completed_deployments = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM applicant_profiles WHERE application_status = "Pending"')
+    pending_applicants = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM applicant_profiles WHERE application_status = "Approved"')
+    approved_applicants = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM applicant_profiles WHERE application_status = "Rejected"')
+    rejected_applicants = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM leave_applications WHERE status = "Pending"')
+    pending_leaves = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM leave_applications WHERE status = "Approved"')
+    approved_leaves = cursor.fetchone()['count']
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/reports.html',
+                         profile=profile,
+                         admin_count=admin_count,
+                         employee_count=employee_count,
+                         applicant_count=applicant_count,
+                         active_deployments=active_deployments,
+                         completed_deployments=completed_deployments,
+                         pending_applicants=pending_applicants,
+                         approved_applicants=approved_applicants,
+                         rejected_applicants=rejected_applicants,
+                         pending_leaves=pending_leaves,
+                         approved_leaves=approved_leaves)
+
+@admin_bp.route('/reports/export-users')
+@login_required
+@role_required('admin')
+def export_users():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT u.id, u.username, u.email, u.role, u.status, u.created_at,
+               CASE
+                   WHEN u.role = 'employee' THEN CONCAT(ep.first_name, ' ', ep.last_name)
+                   WHEN u.role = 'applicant' THEN CONCAT(ap.first_name, ' ', ap.last_name)
+                   WHEN u.role = 'admin' THEN CONCAT(adp.first_name, ' ', adp.last_name)
+               END as full_name
+        FROM users u
+        LEFT JOIN employee_profiles ep ON u.id = ep.user_id AND u.role = 'employee'
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id AND u.role = 'applicant'
+        LEFT JOIN admin_profiles adp ON u.id = adp.user_id AND u.role = 'admin'
+        ORDER BY u.created_at DESC
+    ''')
+    users = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    # Create CSV
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Username', 'Full Name', 'Email', 'Role', 'Status', 'Created At'])
+    
+    for user in users:
+        writer.writerow([
+            user['id'],
+            user['username'],
+            user['full_name'] or 'N/A',
+            user['email'],
+            user['role'],
+            user['status'],
+            user['created_at'].strftime('%Y-%m-%d %H:%M:%S') if user['created_at'] else ''
+        ])
+    
+    output.seek(0)
+    return Response(output.getvalue(),
+                   mimetype='text/csv',
+                   headers={'Content-Disposition': 'attachment; filename=users_report.csv'})
+
+@admin_bp.route('/reports/export-deployments')
+@login_required
+@role_required('admin')
+def export_deployments():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT d.*,
+               CONCAT(ep.first_name, ' ', ep.last_name) as officer_name,
+               ep.`rank`
+        FROM deployments d
+        JOIN employee_profiles ep ON d.employee_id = ep.user_id
+        ORDER BY d.start_date DESC
+    ''')
+    deployments = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Officer Name', 'Rank', 'Station', 'Unit', 'Position', 'Start Date', 'End Date', 'Status', 'Remarks'])
+    
+    for d in deployments:
+        writer.writerow([
+            d['id'],
+            d['officer_name'],
+            d['rank'] or 'N/A',
+            d['station'],
+            d['unit'] or 'N/A',
+            d['position'] or 'N/A',
+            d['start_date'].strftime('%Y-%m-%d') if d['start_date'] else '',
+            d['end_date'].strftime('%Y-%m-%d') if d['end_date'] else 'Ongoing',
+            d['status'],
+            d['remarks'] or ''
+        ])
+    
+    output.seek(0)
+    return Response(output.getvalue(),
+                   mimetype='text/csv',
+                   headers={'Content-Disposition': 'attachment; filename=deployments_report.csv'})
+
+@admin_bp.route('/reports/export-applicants')
+@login_required
+@role_required('admin')
+def export_applicants():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT u.id, u.email as user_email, u.status as account_status,
+               ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
+               ap.address, ap.date_of_birth, ap.application_status, ap.applied_date
+        FROM users u
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+        WHERE u.role = 'applicant'
+        ORDER BY ap.applied_date DESC
+    ''')
+    applicants = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Full Name', 'Email', 'Phone', 'Address', 'Date of Birth', 'Application Status', 'Account Status', 'Applied Date'])
+    
+    for a in applicants:
+        full_name = f"{a['first_name'] or ''} {a['middle_name'] or ''} {a['last_name'] or ''}".strip()
+        writer.writerow([
+            a['id'],
+            full_name or 'N/A',
+            a['email'] or a['user_email'],
+            a['phone'] or 'N/A',
+            a['address'] or 'N/A',
+            a['date_of_birth'].strftime('%Y-%m-%d') if a['date_of_birth'] else 'N/A',
+            a['application_status'] or 'Pending',
+            a['account_status'],
+            a['applied_date'].strftime('%Y-%m-%d %H:%M:%S') if a['applied_date'] else ''
+        ])
+    
+    output.seek(0)
+    return Response(output.getvalue(),
+                   mimetype='text/csv',
+                   headers={'Content-Disposition': 'attachment; filename=applicants_report.csv'})
+
+@admin_bp.route('/reports/export-leaves')
+@login_required
+@role_required('admin')
+def export_leaves():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT la.*,
+               CONCAT(ep.first_name, ' ', ep.last_name) as employee_name,
+               ep.`rank`
+        FROM leave_applications la
+        JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        ORDER BY la.applied_date DESC
+    ''')
+    leaves = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Employee Name', 'Rank', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Reason', 'Status', 'Applied Date'])
+    
+    for l in leaves:
+        writer.writerow([
+            l['id'],
+            l['employee_name'],
+            l['rank'] or 'N/A',
+            l['leave_type'],
+            l['start_date'].strftime('%Y-%m-%d') if l['start_date'] else '',
+            l['end_date'].strftime('%Y-%m-%d') if l['end_date'] else '',
+            l['days_count'],
+            l['reason'],
+            l['status'],
+            l['applied_date'].strftime('%Y-%m-%d %H:%M:%S') if l['applied_date'] else ''
+        ])
+    
+    output.seek(0)
+    return Response(output.getvalue(),
+                   mimetype='text/csv',
+                   headers={'Content-Disposition': 'attachment; filename=leave_applications_report.csv'})
+
+@admin_bp.route('/reports/export-custom')
+@login_required
+@role_required('admin')
+def export_custom():
+    report_type = request.args.get('report_type')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    if report_type == 'users':
+        cursor.execute('''
+            SELECT u.*, 
+                   CASE
+                       WHEN u.role = 'employee' THEN CONCAT(ep.first_name, ' ', ep.last_name)
+                       WHEN u.role = 'applicant' THEN CONCAT(ap.first_name, ' ', ap.last_name)
+                       WHEN u.role = 'admin' THEN CONCAT(adp.first_name, ' ', adp.last_name)
+                   END as full_name
+            FROM users u
+            LEFT JOIN employee_profiles ep ON u.id = ep.user_id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            LEFT JOIN admin_profiles adp ON u.id = adp.user_id
+            WHERE DATE(u.created_at) BETWEEN %s AND %s
+        ''', (start_date, end_date))
+        filename = f'users_{start_date}_to_{end_date}.csv'
+        
+    elif report_type == 'deployments':
+        cursor.execute('''
+            SELECT d.*, CONCAT(ep.first_name, ' ', ep.last_name) as officer_name, ep.`rank`
+            FROM deployments d
+            JOIN employee_profiles ep ON d.employee_id = ep.user_id
+            WHERE DATE(d.start_date) BETWEEN %s AND %s
+        ''', (start_date, end_date))
+        filename = f'deployments_{start_date}_to_{end_date}.csv'
+        
+    elif report_type == 'applicants':
+        cursor.execute('''
+            SELECT u.*, ap.*
+            FROM users u
+            JOIN applicant_profiles ap ON u.id = ap.user_id
+            WHERE DATE(ap.applied_date) BETWEEN %s AND %s
+        ''', (start_date, end_date))
+        filename = f'applicants_{start_date}_to_{end_date}.csv'
+        
+    elif report_type == 'leaves':
+        cursor.execute('''
+            SELECT la.*, CONCAT(ep.first_name, ' ', ep.last_name) as employee_name, ep.`rank`
+            FROM leave_applications la
+            JOIN employee_profiles ep ON la.employee_id = ep.user_id
+            WHERE DATE(la.applied_date) BETWEEN %s AND %s
+        ''', (start_date, end_date))
+        filename = f'leaves_{start_date}_to_{end_date}.csv'
+    
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    if not data:
+        flash('No data found for the selected date range', 'warning')
+        return redirect(url_for('admin.reports'))
+    
+    output = StringIO()
+    writer = csv.DictWriter(output, fieldnames=data[0].keys())
+    writer.writeheader()
+    writer.writerows(data)
+    
+    output.seek(0)
+    return Response(output.getvalue(),
+                   mimetype='text/csv',
+                   headers={'Content-Disposition': f'attachment; filename={filename}'})
+
