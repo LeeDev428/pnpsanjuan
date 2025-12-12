@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/recruitment.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/deployment.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     {% block extra_css %}{% endblock %}
 </head>
@@ -73,9 +75,13 @@
                     <i class="fas fa-users icon"></i>
                     <span>Manage Users</span>
                 </a>
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-file-alt icon"></i>
-                    <span>Applications</span>
+                <a href="{{ url_for('admin.recruitment') }}" class="sidebar-link {% if request.endpoint == 'admin.recruitment' or request.endpoint == 'admin.view_applicant' %}active{% endif %}">
+                    <i class="fas fa-user-plus icon"></i>
+                    <span>Recruitment</span>
+                </a>
+                <a href="{{ url_for('admin.deployment') }}" class="sidebar-link {% if request.endpoint == 'admin.deployment' %}active{% endif %}">
+                    <i class="fas fa-map-marker-alt icon"></i>
+                    <span>Deployment</span>
                 </a>
                 <a href="#" class="sidebar-link">
                     <i class="fas fa-chart-bar icon"></i>
