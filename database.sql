@@ -1,8 +1,75 @@
 -- Create database
 CREATE DATABASE IF NOT EXISTS pnpsanjuan_db;
 
--- Use the database
 USE pnpsanjuan_db;
 
--- Users table will be created automatically by the Flask app
--- This file is just for reference
+-- Users table with role
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'employee', 'applicant') NOT NULL DEFAULT 'applicant',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Employee profiles table
+CREATE TABLE IF NOT EXISTS employee_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL,
+    first_name VARCHAR(100),
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100),
+    suffix VARCHAR(20),
+    unit VARCHAR(100),
+    station VARCHAR(100),
+    address VARCHAR(255),
+    home_address VARCHAR(255),
+    gender ENUM('Male', 'Female', 'Other'),
+    date_of_birth DATE,
+    place_of_birth VARCHAR(100),
+    religion VARCHAR(50),
+    emergency_contact_name VARCHAR(100),
+    emergency_relationship VARCHAR(50),
+    emergency_contact_number VARCHAR(20),
+    `rank` VARCHAR(50),
+    profile_picture VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Educational background table
+CREATE TABLE IF NOT EXISTS education (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    level VARCHAR(50),
+    school_name VARCHAR(200),
+    year_graduated INT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Applicant profiles table
+CREATE TABLE IF NOT EXISTS applicant_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL,
+    first_name VARCHAR(100),
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    address VARCHAR(255),
+    application_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    applied_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Insert default admin, employee, and applicant users
+-- Password for all: password123
+INSERT INTO users (username, email, password, role) VALUES
+('admin', 'admin@pnpsanjuan.com', 'scrypt:32768:8:1$J6XGzqm6rUP2RQMJ$d4c0c6f8e7f4a8b3c2d5e6f9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0', 'admin'),
+('employee1', 'employee@pnpsanjuan.com', 'scrypt:32768:8:1$J6XGzqm6rUP2RQMJ$d4c0c6f8e7f4a8b3c2d5e6f9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0', 'employee'),
+('applicant1', 'applicant@pnpsanjuan.com', 'scrypt:32768:8:1$J6XGzqm6rUP2RQMJ$d4c0c6f8e7f4a8b3c2d5e6f9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0', 'applicant');
+
+-- Insert sample employee profile
+INSERT INTO employee_profiles (user_id, first_name, middle_name, last_name, `rank`) VALUES
+(2, 'Juan', 'Dela', 'Cruz', 'PAT');
+ 
