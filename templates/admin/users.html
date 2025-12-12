@@ -26,6 +26,25 @@
 </div>
 
 <div class="users-content">
+    <!-- Filters and Search -->
+    <div class="users-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by username, email, or name..." onkeyup="searchUsers()">
+        </div>
+        <div class="filter-group">
+            <select id="statusFilter" onchange="filterUsers()">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="openAddUserModal()">
+            <i class="fas fa-user-plus"></i> Add New User
+        </button>
+    </div>
+
     <div class="users-table-container">
         <table class="users-table">
             <thead>
