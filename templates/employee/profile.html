@@ -36,83 +36,107 @@
         <!-- Right Column: General Information -->
         <div class="profile-info-section">
             <h2>I. General Information</h2>
-            <div class="form-grid-3col">
-                <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name" value="{{ profile.first_name or '' }}" readonly class="readonly-input">
+            <div class="form-grid-2col">
+                <div class="info-row">
+                    <label>First Name</label>
+                    <div class="info-value" id="first_name_view">{{ profile.first_name or 'N/A' }}</div>
+                    <input type="text" id="first_name" name="first_name" value="{{ profile.first_name or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="unit">Unit</label>
-                    <input type="text" id="unit" name="unit" value="{{ profile.unit or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Unit</label>
+                    <div class="info-value" id="unit_view">{{ profile.unit or 'N/A' }}</div>
+                    <input type="text" id="unit" name="unit" value="{{ profile.unit or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="middle_name">Middle Name</label>
-                    <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name or '' }}" readonly class="readonly-input">
+                
+                <div class="info-row">
+                    <label>Middle Name</label>
+                    <div class="info-value" id="middle_name_view">{{ profile.middle_name or 'N/A' }}</div>
+                    <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="station">Station</label>
-                    <input type="text" id="station" name="station" value="{{ profile.station or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Station</label>
+                    <div class="info-value" id="station_view">{{ profile.station or 'N/A' }}</div>
+                    <input type="text" id="station" name="station" value="{{ profile.station or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}" readonly class="readonly-input">
+                
+                <div class="info-row">
+                    <label>Last Name</label>
+                    <div class="info-value" id="last_name_view">{{ profile.last_name or 'N/A' }}</div>
+                    <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="address">Address</label>
-                    <input type="text" id="address" name="address" value="{{ profile.address or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Address</label>
+                    <div class="info-value" id="address_view">{{ profile.address or 'N/A' }}</div>
+                    <input type="text" id="address" name="address" value="{{ profile.address or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="suffix">Suffix</label>
-                    <input type="text" id="suffix" name="suffix" value="{{ profile.suffix or '' }}" readonly class="readonly-input">
+                
+                <div class="info-row">
+                    <label>Suffix</label>
+                    <div class="info-value" id="suffix_view">{{ profile.suffix or 'N/A' }}</div>
+                    <input type="text" id="suffix" name="suffix" value="{{ profile.suffix or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="rank">Rank</label>
-                    <input type="text" id="rank" name="rank" value="{{ profile.rank or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Rank</label>
+                    <div class="info-value" id="rank_view">{{ profile.rank or 'N/A' }}</div>
+                    <input type="text" id="rank" name="rank" value="{{ profile.rank or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="home_address">Home Address</label>
-                    <input type="text" id="home_address" name="home_address" value="{{ profile.home_address or '' }}" readonly class="readonly-input">
+                
+                <div class="info-row full-width">
+                    <label>Home Address</label>
+                    <div class="info-value" id="home_address_view">{{ profile.home_address or 'N/A' }}</div>
+                    <input type="text" id="home_address" name="home_address" value="{{ profile.home_address or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ user.email }}" readonly class="readonly-input">
+                
+                <div class="info-row full-width">
+                    <label>Email</label>
+                    <div class="info-value">{{ user.email }}</div>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" readonly style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="gender">Gender</label>
-                    <select id="gender" name="gender" disabled class="readonly-input">
+                
+                <div class="info-row">
+                    <label>Gender</label>
+                    <div class="info-value" id="gender_view">{{ profile.gender or 'N/A' }}</div>
+                    <select id="gender" name="gender" style="display: none;">
                         <option value="">Select</option>
                         <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
                         <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
                         <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="date_of_birth">Date of Birth</label>
-                    <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile.date_of_birth or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Date of Birth</label>
+                    <div class="info-value" id="date_of_birth_view">{{ profile.date_of_birth or 'N/A' }}</div>
+                    <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile.date_of_birth or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="place_of_birth">Place of Birth</label>
-                    <input type="text" id="place_of_birth" name="place_of_birth" value="{{ profile.place_of_birth or '' }}" readonly class="readonly-input">
+                
+                <div class="info-row">
+                    <label>Place of Birth</label>
+                    <div class="info-value" id="place_of_birth_view">{{ profile.place_of_birth or 'N/A' }}</div>
+                    <input type="text" id="place_of_birth" name="place_of_birth" value="{{ profile.place_of_birth or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="religion">Religion</label>
-                    <input type="text" id="religion" name="religion" value="{{ profile.religion or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Religion</label>
+                    <div class="info-value" id="religion_view">{{ profile.religion or 'N/A' }}</div>
+                    <input type="text" id="religion" name="religion" value="{{ profile.religion or '' }}" style="display: none;">
                 </div>
             </div>
 
             <h3>Emergency Contact:</h3>
-            <div class="form-grid-3col">
-                <div class="form-group">
-                    <label for="emergency_contact_name">Name:</label>
-                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ profile.emergency_contact_name or '' }}" readonly class="readonly-input">
+            <div class="form-grid-2col">
+                <div class="info-row">
+                    <label>Name:</label>
+                    <div class="info-value" id="emergency_contact_name_view">{{ profile.emergency_contact_name or 'N/A' }}</div>
+                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ profile.emergency_contact_name or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="emergency_relationship">Relationship:</label>
-                    <input type="text" id="emergency_relationship" name="emergency_relationship" value="{{ profile.emergency_relationship or '' }}" readonly class="readonly-input">
+                <div class="info-row">
+                    <label>Relationship:</label>
+                    <div class="info-value" id="emergency_relationship_view">{{ profile.emergency_relationship or 'N/A' }}</div>
+                    <input type="text" id="emergency_relationship" name="emergency_relationship" value="{{ profile.emergency_relationship or '' }}" style="display: none;">
                 </div>
-                <div class="form-group">
-                    <label for="emergency_contact_number">Contact #:</label>
-                    <input type="text" id="emergency_contact_number" name="emergency_contact_number" value="{{ profile.emergency_contact_number or '' }}" readonly class="readonly-input">
+                <div class="info-row full-width">
+                    <label>Contact #:</label>
+                    <div class="info-value" id="emergency_contact_number_view">{{ profile.emergency_contact_number or 'N/A' }}</div>
+                    <input type="text" id="emergency_contact_number" name="emergency_contact_number" value="{{ profile.emergency_contact_number or '' }}" style="display: none;">
                 </div>
             </div>
         </div>
@@ -161,22 +185,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const pictureUploadGroup = document.getElementById('pictureUploadGroup');
     const form = document.getElementById('profileForm');
     
-    const readonlyInputs = document.querySelectorAll('.readonly-input');
+    const fields = [
+        'first_name', 'unit', 'middle_name', 'station', 'last_name', 'address',
+        'suffix', 'rank', 'home_address', 'gender', 'date_of_birth',
+        'place_of_birth', 'religion', 'emergency_contact_name',
+        'emergency_relationship', 'emergency_contact_number'
+    ];
     
     let originalValues = {};
 
     editBtn.addEventListener('click', function() {
         // Save original values
-        readonlyInputs.forEach(input => {
-            originalValues[input.id] = input.value;
+        fields.forEach(field => {
+            const input = document.getElementById(field);
+            if (input) {
+                originalValues[field] = input.value;
+            }
         });
 
-        // Enable all inputs
-        readonlyInputs.forEach(input => {
-            if (input.id !== 'email') { // Keep email readonly
-                input.removeAttribute('readonly');
-                input.removeAttribute('disabled');
-                input.classList.remove('readonly-input');
+        // Switch to edit mode
+        fields.forEach(field => {
+            const viewElem = document.getElementById(field + '_view');
+            const inputElem = document.getElementById(field);
+            
+            if (viewElem && inputElem && field !== 'email') {
+                viewElem.style.display = 'none';
+                inputElem.style.display = 'block';
             }
         });
 
@@ -190,19 +224,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     cancelBtn.addEventListener('click', function() {
         // Restore original values
-        readonlyInputs.forEach(input => {
-            if (originalValues[input.id] !== undefined) {
-                input.value = originalValues[input.id];
+        fields.forEach(field => {
+            const inputElem = document.getElementById(field);
+            if (inputElem && originalValues[field] !== undefined) {
+                inputElem.value = originalValues[field];
             }
-            input.setAttribute('readonly', 'readonly');
-            if (input.tagName === 'SELECT') {
-                input.setAttribute('disabled', 'disabled');
-            }
-            input.classList.add('readonly-input');
         });
 
         // Reset file input
         document.getElementById('profile_picture').value = '';
+
+        // Switch back to view mode
+        fields.forEach(field => {
+            const viewElem = document.getElementById(field + '_view');
+            const inputElem = document.getElementById(field);
+            
+            if (viewElem && inputElem) {
+                viewElem.style.display = 'block';
+                inputElem.style.display = 'none';
+            }
+        });
 
         // Show/hide buttons
         editBtn.style.display = 'inline-block';
