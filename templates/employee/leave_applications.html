@@ -336,5 +336,8 @@ window.onclick = function(event) {
 .leave-table td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; }
 .leave-table tbody tr:hover { background: #f9f9f9; }
 .leave-table .no-data { text-align: center; padding: 40px; color: #999; font-style: italic; }
+/* Fix modal display on page load */
+.modal { display: none !important; }
+.modal[style*="display: flex"] { display: flex !important; }
 </style>
 {% endblock %}
