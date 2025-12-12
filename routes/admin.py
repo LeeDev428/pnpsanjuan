@@ -329,3 +329,290 @@ def delete_user(user_id):
         conn.close()
         return {'success': False, 'message': f'Error deleting user: {str(e)}'}
 
+@admin_bp.route('/recruitment')
+@login_required
+@role_required('admin')
+def recruitment():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile for nav
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    # Get all applicants with pagination
+    cursor.execute('''
+        SELECT u.id as user_id, u.email as user_email, u.status as account_status,
+               ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
+               ap.application_status, ap.applied_date
+        FROM users u
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+        WHERE u.role = 'applicant'
+        ORDER BY ap.applied_date DESC
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
+    applicants = cursor.fetchall()
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "applicant"')
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/recruitment.html',
+                         applicants=applicants,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         profile=profile)
+
+@admin_bp.route('/recruitment/<int:user_id>/view')
+@login_required
+@role_required('admin')
+def view_applicant(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT u.id, u.email as user_email, u.status as account_status,
+               ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
+               ap.address, ap.date_of_birth, ap.application_status,
+               DATE_FORMAT(ap.applied_date, '%%M %%d, %%Y') as applied_date
+        FROM users u
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+        WHERE u.id = %s AND u.role = 'applicant'
+    ''', (user_id,))
+    applicant = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    if not applicant:
+        return {'success': False, 'message': 'Applicant not found'}, 404
+    
+    return {'success': True, 'applicant': applicant}
+
+@admin_bp.route('/recruitment/update-status', methods=['POST'])
+@login_required
+@role_required('admin')
+def update_applicant_status():
+    applicant_id = request.form.get('applicant_id')
+    status = request.form.get('status')
+    
+    if not all([applicant_id, status]):
+        return {'success': False, 'message': 'Missing required fields'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute(
+            'UPDATE applicant_profiles SET application_status = %s WHERE user_id = %s',
+            (status, applicant_id)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': f'Application status updated to {status}'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error updating status: {str(e)}'}
+
+@admin_bp.route('/deployment')
+@login_required
+@role_required('admin')
+def deployment():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Get all employees for dropdown
+    cursor.execute('''
+        SELECT u.id as user_id,
+               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as full_name,
+               ep.`rank`
+        FROM users u
+        JOIN employee_profiles ep ON u.id = ep.user_id
+        WHERE u.role = 'employee' AND u.status = 'active'
+        ORDER BY ep.last_name
+    ''')
+    employees = cursor.fetchall()
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    # Get deployments with officer details
+    cursor.execute('''
+        SELECT d.*,
+               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as officer_name,
+               ep.`rank`
+        FROM deployments d
+        JOIN employee_profiles ep ON d.employee_id = ep.user_id
+        ORDER BY d.start_date DESC
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
+    deployments = cursor.fetchall()
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM deployments')
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/deployment.html',
+                         deployments=deployments,
+                         employees=employees,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         profile=profile)
+
+@admin_bp.route('/deployment/add', methods=['POST'])
+@login_required
+@role_required('admin')
+def add_deployment():
+    employee_id = request.form.get('employee_id')
+    station = request.form.get('station')
+    unit = request.form.get('unit')
+    position = request.form.get('position')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    status = request.form.get('status', 'Active')
+    remarks = request.form.get('remarks')
+    
+    if not all([employee_id, station, start_date]):
+        return {'success': False, 'message': 'Required fields missing'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            INSERT INTO deployments (employee_id, station, unit, position, start_date, end_date, status, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (employee_id, station, unit, position, start_date, end_date if end_date else None, status, remarks))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Deployment added successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error adding deployment: {str(e)}'}
+
+@admin_bp.route('/deployment/edit', methods=['POST'])
+@login_required
+@role_required('admin')
+def edit_deployment():
+    deployment_id = request.form.get('deployment_id')
+    employee_id = request.form.get('employee_id')
+    station = request.form.get('station')
+    unit = request.form.get('unit')
+    position = request.form.get('position')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    status = request.form.get('status')
+    remarks = request.form.get('remarks')
+    
+    if not all([deployment_id, employee_id, station, start_date]):
+        return {'success': False, 'message': 'Required fields missing'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            UPDATE deployments
+            SET employee_id = %s, station = %s, unit = %s, position = %s,
+                start_date = %s, end_date = %s, status = %s, remarks = %s
+            WHERE id = %s
+        ''', (employee_id, station, unit, position, start_date, end_date if end_date else None, status, remarks, deployment_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Deployment updated successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error updating deployment: {str(e)}'}
+
+@admin_bp.route('/deployment/<int:deployment_id>/get')
+@login_required
+@role_required('admin')
+def get_deployment(deployment_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT d.*,
+               DATE_FORMAT(d.start_date, '%%b %%d, %%Y') as start_date_formatted,
+               DATE_FORMAT(d.end_date, '%%b %%d, %%Y') as end_date_formatted,
+               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as officer_name,
+               ep.`rank`
+        FROM deployments d
+        JOIN employee_profiles ep ON d.employee_id = ep.user_id
+        WHERE d.id = %s
+    ''', (deployment_id,))
+    deployment = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    if not deployment:
+        return {'success': False, 'message': 'Deployment not found'}, 404
+    
+    return {'success': True, 'deployment': deployment}
+
+@admin_bp.route('/deployment/<int:deployment_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_deployment(deployment_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('DELETE FROM deployments WHERE id = %s', (deployment_id,))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return {'success': False, 'message': 'Deployment not found'}
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Deployment deleted successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error deleting deployment: {str(e)}'}
+
