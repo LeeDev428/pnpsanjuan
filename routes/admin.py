@@ -12,7 +12,13 @@ def allowed_file(filename):
 @login_required
 @role_required('admin')
 def dashboard():
-    return render_template('admin/dashboard.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return render_template('admin/dashboard.html', profile=profile)
 
 @admin_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
