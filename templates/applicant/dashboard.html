@@ -1,0 +1,40 @@
+{% extends "applicant/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Applicant Dashboard</h1>
+    <p>Welcome, {{ session['username'] }}</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-icon">👤</div>
+        <h3>My Profile</h3>
+        <p>Update your application details</p>
+        <a href="{{ url_for('applicant.profile') }}" class="btn btn-primary">Edit Profile</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">📋</div>
+        <h3>Application Status</h3>
+        <p>Track your application progress</p>
+        <a href="#" class="btn btn-primary">View Status</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">📄</div>
+        <h3>Documents</h3>
+        <p>Upload required documents</p>
+        <a href="#" class="btn btn-primary">Manage Documents</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">ℹ️</div>
+        <h3>Requirements</h3>
+        <p>View application requirements</p>
+        <a href="#" class="btn btn-primary">View Requirements</a>
+    </div>
+</div>
+{% endblock %}
