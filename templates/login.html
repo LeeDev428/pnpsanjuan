@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - PNP San Juan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Hidden flash messages for toast -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert-message" data-category="{{ category }}" style="display:none;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
     {% include 'partials/navbar.html' %}
 
     <div class="auth-container">
@@ -15,14 +28,6 @@
                 <h2>Welcome Back</h2>
                 <p>Sign in to your account</p>
             </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
 
             <form method="POST" class="auth-form">
                 <div class="form-group">
@@ -44,6 +49,7 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     {% include 'partials/footer.html' %}
 </body>
 </html>
