@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Portal{% endblock %} - PNP San Juan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <div class="logo">
+                <a href="{{ url_for('landing') }}">
+                    <img src="{{ url_for('static', filename='images/pnpsanjaun.png') }}" alt="PNP San Juan">
+                    <span>PNP San Juan</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <div class="profile-dropdown">
+                    <button class="profile-btn">
+                        <span class="user-icon">👤</span>
+                        <span>{{ session['username'] }}</span>
+                        <span class="role-badge-small role-employee">Employee</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('employee.dashboard') }}">Dashboard</a>
+                        <a href="{{ url_for('employee.profile') }}">My Profile</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="layout-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Employee Portal</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('employee.dashboard') }}" class="sidebar-link {% if request.endpoint == 'employee.dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('employee.profile') }}" class="sidebar-link {% if request.endpoint == 'employee.profile' %}active{% endif %}">
+                    <span class="icon">👤</span>
+                    <span>My Profile</span>
+                </a>
+                <a href="#" class="sidebar-link">
+                    <span class="icon">📅</span>
+                    <span>Schedule</span>
+                </a>
+                <a href="#" class="sidebar-link">
+                    <span class="icon">📝</span>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="sidebar-link">
+                    <span class="icon">📢</span>
+                    <span>Announcements</span>
+                </a>
+                <a href="#" class="sidebar-link">
+                    <span class="icon">📚</span>
+                    <span>Training</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alerts-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
