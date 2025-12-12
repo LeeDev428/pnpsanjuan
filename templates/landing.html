@@ -5,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PNP San Juan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    {% include 'partials/navbar.html' %}
-
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Hidden flash messages for toast -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="container">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
+            {% for category, message in messages %}
+                <div class="alert-message" data-category="{{ category }}" style="display:none;">{{ message }}</div>
+            {% endfor %}
         {% endif %}
     {% endwith %}
+    
+    {% include 'partials/navbar.html' %}
 
     <section class="hero">
         <div class="container">
@@ -38,17 +41,17 @@
         <div class="container">
             <div class="feature-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
                     <h3>Security</h3>
                     <p>Committed to keeping our community safe</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🤝</div>
+                    <div class="feature-icon"><i class="fas fa-hands-helping"></i></div>
                     <h3>Community</h3>
                     <p>Building stronger connections with residents</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
                     <h3>Efficiency</h3>
                     <p>Quick response and reliable service</p>
                 </div>
@@ -56,6 +59,7 @@
         </div>
     </section>
 
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     {% include 'partials/footer.html' %}
 </body>
 </html>
