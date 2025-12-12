@@ -53,7 +53,8 @@
                     <th>Username</th>
                     <th>Email</th>
                     <th>Full Name</th>
-                    <th>Status</th>
+                    <th>Account Status</th>
+                    <th>{{ 'App Status' if tab == 'applicants' else 'Rank' }}</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -85,6 +86,17 @@
                             {% if not user.first_name %}<span class="text-muted">Not set</span>{% endif %}
                         </td>
                         <td>
+                            {% if user.status == 'active' %}
+                                <span class="badge badge-success">Active</span>
+                            {% elif user.status == 'inactive' %}
+                                <span class="badge badge-secondary">Inactive</span>
+                            {% elif user.status == 'suspended' %}
+                                <span class="badge badge-danger">Suspended</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ user.status or 'N/A' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             {% if tab == 'applicants' %}
                                 {% if user.application_status == 'Pending' %}
                                     <span class="badge badge-warning">{{ user.application_status }}</span>
@@ -109,10 +121,10 @@
                                 <button class="btn-icon btn-view" title="View Details" onclick="viewUser({{ user.id }}, '{{ tab }}')">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn-icon btn-edit" title="Edit User" onclick="editUser({{ user.id }}, '{{ tab }}')">
+                                <button class="btn-icon btn-edit" title="Edit User" onclick="openEditUserModal({{ user.id }}, '{{ tab }}')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-icon btn-delete" title="Delete User" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                <button class="btn-icon btn-delete" title="Delete User" onclick="confirmDeleteUser({{ user.id }}, '{{ user.username }}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -168,18 +180,321 @@
     {% endif %}
 </div>
 
+<!-- Add/Edit User Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New User</h2>
+            <button class="modal-close" onclick="closeUserModal()">&times;</button>
+        </div>
+        <form id="userForm" method="POST">
+            <input type="hidden" id="userId" name="user_id">
+            <input type="hidden" id="userAction" name="action" value="add">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+            </div>
+
+            <div class="form-row" id="passwordRow">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password *</label>
+                    <input type="password" id="confirm_password" name="confirm_password">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="role">Role *</label>
+                    <select id="role" name="role" required>
+                        <option value="employee">Employee</option>
+                        <option value="applicant">Applicant</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status *</label>
+                    <select id="status" name="status" required>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-save"></i> Save User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View User Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>User Details</h2>
+            <button class="modal-close" onclick="closeViewModal()">&times;</button>
+        </div>
+        <div id="viewModalContent" class="view-content">
+            <!-- Content loaded dynamically -->
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-outline" onclick="closeViewModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
+// Search users
+function searchUsers() {
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+}
+
+// Filter users
+function filterUsers() {
+    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    
+    rows.forEach(row => {
+        if (!statusFilter) {
+            row.style.display = '';
+            return;
+        }
+        
+        const statusBadge = row.querySelector('.badge');
+        if (statusBadge) {
+            const status = statusBadge.textContent.toLowerCase();
+            row.style.display = status === statusFilter ? '' : 'none';
+        }
+    });
+}
+
+// Open add user modal
+function openAddUserModal() {
+    document.getElementById('modalTitle').textContent = 'Add New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('userAction').value = 'add';
+    document.getElementById('password').required = true;
+    document.getElementById('confirm_password').required = true;
+    document.getElementById('passwordRow').style.display = 'flex';
+    document.getElementById('userModal').style.display = 'flex';
+}
+
+// Open edit user modal
+function openEditUserModal(userId, role) {
+    document.getElementById('modalTitle').textContent = 'Edit User';
+    document.getElementById('userId').value = userId;
+    document.getElementById('userAction').value = 'edit';
+    document.getElementById('password').required = false;
+    document.getElementById('confirm_password').required = false;
+    document.getElementById('passwordRow').style.display = 'none';
+    
+    // Fetch user data
+    fetch(`/admin/users/${userId}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('username').value = data.user.username;
+                document.getElementById('email').value = data.user.email;
+                document.getElementById('role').value = data.user.role;
+                document.getElementById('status').value = data.user.status || 'active';
+                document.getElementById('userModal').style.display = 'flex';
+            } else {
+                showToast(data.message || 'Failed to load user data', 'error', 'Error');
+            }
+        })
+        .catch(error => {
+            showToast('Error loading user data', 'error', 'Error');
+            console.error('Error:', error);
+        });
+}
+
+// Close user modal
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+    document.getElementById('userForm').reset();
+}
+
+// View user details
 function viewUser(userId, role) {
-    showToast('View user details (Coming soon)', 'info', 'User Details');
+    fetch(`/admin/users/${userId}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                const profile = data.profile || {};
+                
+                let content = `
+                    <div class="user-detail-grid">
+                        <div class="detail-row">
+                            <strong>Username:</strong>
+                            <span>${user.username}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Email:</strong>
+                            <span>${user.email}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Role:</strong>
+                            <span class="badge badge-info">${user.role.toUpperCase()}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Status:</strong>
+                            <span class="badge ${user.status === 'active' ? 'badge-success' : user.status === 'suspended' ? 'badge-danger' : 'badge-secondary'}">${user.status || 'Active'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Created:</strong>
+                            <span>${new Date(user.created_at).toLocaleDateString()}</span>
+                        </div>
+                `;
+                
+                if (profile.first_name) {
+                    content += `
+                        <div class="detail-row">
+                            <strong>Full Name:</strong>
+                            <span>${profile.first_name || ''} ${profile.middle_name || ''} ${profile.last_name || ''}</span>
+                        </div>
+                    `;
+                }
+                
+                if (role === 'employees' && profile.rank) {
+                    content += `
+                        <div class="detail-row">
+                            <strong>Rank:</strong>
+                            <span>${profile.rank}</span>
+                        </div>
+                    `;
+                }
+                
+                if (role === 'applicants' && profile.application_status) {
+                    content += `
+                        <div class="detail-row">
+                            <strong>Application Status:</strong>
+                            <span class="badge ${profile.application_status === 'Approved' ? 'badge-success' : profile.application_status === 'Rejected' ? 'badge-danger' : 'badge-warning'}">${profile.application_status}</span>
+                        </div>
+                    `;
+                }
+                
+                content += '</div>';
+                document.getElementById('viewModalContent').innerHTML = content;
+                document.getElementById('viewModal').style.display = 'flex';
+            } else {
+                showToast(data.message || 'Failed to load user data', 'error', 'Error');
+            }
+        })
+        .catch(error => {
+            showToast('Error loading user data', 'error', 'Error');
+            console.error('Error:', error);
+        });
 }
 
-function editUser(userId, role) {
-    showToast('Edit user functionality (Coming soon)', 'info', 'Edit User');
+// Close view modal
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
 }
 
-function deleteUser(userId, username) {
-    if (confirm(`Are you sure you want to delete user "${username}"?`)) {
-        showToast('Delete user functionality (Coming soon)', 'warning', 'Delete User');
+// Confirm delete user
+function confirmDeleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"?\n\nThis action cannot be undone and will delete all associated data.`)) {
+        deleteUser(userId);
+    }
+}
+
+// Delete user
+function deleteUser(userId) {
+    fetch(`/admin/users/${userId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'User deleted successfully', 'success', 'Success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Failed to delete user', 'error', 'Error');
+        }
+    })
+    .catch(error => {
+        showToast('Error deleting user', 'error', 'Error');
+        console.error('Error:', error);
+    });
+}
+
+// Handle form submission
+document.getElementById('userForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const action = formData.get('action');
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirm_password');
+    
+    // Validate passwords if adding new user
+    if (action === 'add' && password !== confirmPassword) {
+        showToast('Passwords do not match', 'error', 'Validation Error');
+        return;
+    }
+    
+    const url = action === 'add' ? '/admin/users/add' : '/admin/users/edit';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'User saved successfully', 'success', 'Success');
+            closeUserModal();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.message || 'Failed to save user', 'error', 'Error');
+        }
+    })
+    .catch(error => {
+        showToast('Error saving user', 'error', 'Error');
+        console.error('Error:', error);
+    });
+});
+
+// Close modals on outside click
+window.onclick = function(event) {
+    const userModal = document.getElementById('userModal');
+    const viewModal = document.getElementById('viewModal');
+    
+    if (event.target === userModal) {
+        closeUserModal();
+    }
+    if (event.target === viewModal) {
+        closeViewModal();
     }
 }
 </script>
