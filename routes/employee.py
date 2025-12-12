@@ -12,7 +12,13 @@ def allowed_file(filename):
 @login_required
 @role_required('employee')
 def dashboard():
-    return render_template('employee/dashboard.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT profile_picture FROM employee_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return render_template('employee/dashboard.html', profile=profile)
 
 @employee_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
