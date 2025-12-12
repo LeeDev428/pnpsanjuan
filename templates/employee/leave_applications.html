@@ -1,0 +1,340 @@
+{% extends "employee/base.html" %}
+
+{% block title %}Leave Applications - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="leave-container">
+    <div class="leave-header">
+        <h1><i class="fas fa-calendar-alt"></i> Leave Applications</h1>
+        <p>Submit and manage your leave requests</p>
+    </div>
+
+    <div class="leave-toolbar">
+        <div class="filter-group">
+            <label><i class="fas fa-filter"></i> Status:</label>
+            <select id="statusFilter" onchange="filterLeaves()">
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+        <button class="btn-add" onclick="openAddModal()">
+            <i class="fas fa-plus"></i> New Leave Application
+        </button>
+    </div>
+
+    <div class="leave-content">
+        <div class="table-container">
+            <table class="leave-table">
+                <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Applied Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leavesTable">
+                    {% for leave in leaves %}
+                    <tr>
+                        <td>{{ leave.leave_type }}</td>
+                        <td>{{ leave.start_date.strftime('%b %d, %Y') if leave.start_date else 'N/A' }}</td>
+                        <td>{{ leave.end_date.strftime('%b %d, %Y') if leave.end_date else 'N/A' }}</td>
+                        <td>{{ leave.days_count }} day(s)</td>
+                        <td>
+                            <span class="status-badge status-{{ leave.status|lower }}">
+                                {{ leave.status }}
+                            </span>
+                        </td>
+                        <td>{{ leave.applied_date.strftime('%b %d, %Y') if leave.applied_date else 'N/A' }}</td>
+                        <td class="action-buttons">
+                            <button class="btn-action btn-view" onclick="viewLeave({{ leave.id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if leave.status == 'Pending' %}
+                            <button class="btn-action btn-edit" onclick="editLeave({{ leave.id }})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-delete" onclick="confirmDelete({{ leave.id }})" title="Cancel">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="no-data">No leave applications found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('employee.leave_applications', page=page-1) }}" class="page-btn">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <a href="{{ url_for('employee.leave_applications', page=p) }}" class="page-btn">{{ p }}</a>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <span class="page-btn disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <a href="{{ url_for('employee.leave_applications', page=page+1) }}" class="page-btn">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Leave Modal -->
+<div id="leaveModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-calendar-alt"></i> <span id="modalTitle">Apply for Leave</span></h2>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        <form id="leaveForm">
+            <input type="hidden" id="leave_id" name="leave_id">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="leave_type">Leave Type *</label>
+                    <select id="leave_type" name="leave_type" required>
+                        <option value="">Select leave type...</option>
+                        <option value="Sick Leave">Sick Leave</option>
+                        <option value="Vacation Leave">Vacation Leave</option>
+                        <option value="Emergency Leave">Emergency Leave</option>
+                        <option value="Maternity Leave">Maternity Leave</option>
+                        <option value="Paternity Leave">Paternity Leave</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="days_count">Number of Days *</label>
+                    <input type="number" id="days_count" name="days_count" min="1" required placeholder="e.g., 3">
+                </div>
+                <div class="form-group">
+                    <label for="start_date">Start Date *</label>
+                    <input type="date" id="start_date" name="start_date" required onchange="calculateEndDate()">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date *</label>
+                    <input type="date" id="end_date" name="end_date" required readonly>
+                </div>
+                <div class="form-group full-width">
+                    <label for="reason">Reason *</label>
+                    <textarea id="reason" name="reason" rows="4" required placeholder="Please provide the reason for your leave application..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Submit Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Leave Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> Leave Application Details</h2>
+            <span class="modal-close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="view-content" id="viewContent"></div>
+    </div>
+</div>
+
+<script>
+function calculateEndDate() {
+    const startDate = document.getElementById('start_date').value;
+    const daysCount = parseInt(document.getElementById('days_count').value) || 1;
+    
+    if (startDate) {
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setDate(end.getDate() + daysCount - 1);
+        
+        const year = end.getFullYear();
+        const month = String(end.getMonth() + 1).padStart(2, '0');
+        const day = String(end.getDate()).padStart(2, '0');
+        
+        document.getElementById('end_date').value = `${year}-${month}-${day}`;
+    }
+}
+
+// Also trigger calculation when days change
+document.getElementById('days_count').addEventListener('input', calculateEndDate);
+
+function filterLeaves() {
+    const filter = document.getElementById('statusFilter').value;
+    const table = document.getElementById('leavesTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const statusBadge = rows[i].querySelector('.status-badge');
+        if (!statusBadge) continue;
+        
+        const status = statusBadge.textContent.trim();
+        rows[i].style.display = (filter === 'all' || status === filter) ? '' : 'none';
+    }
+}
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Apply for Leave';
+    document.getElementById('leaveForm').reset();
+    document.getElementById('leave_id').value = '';
+    document.getElementById('end_date').removeAttribute('readonly');
+    document.getElementById('leaveModal').style.display = 'flex';
+}
+
+function editLeave(id) {
+    fetch(`/employee/leave/${id}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const l = data.leave;
+                document.getElementById('modalTitle').textContent = 'Edit Leave Application';
+                document.getElementById('leave_id').value = l.id;
+                document.getElementById('leave_type').value = l.leave_type;
+                document.getElementById('days_count').value = l.days_count;
+                document.getElementById('start_date').value = l.start_date;
+                document.getElementById('end_date').value = l.end_date;
+                document.getElementById('reason').value = l.reason;
+                document.getElementById('leaveModal').style.display = 'flex';
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+}
+
+function viewLeave(id) {
+    fetch(`/employee/leave/${id}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const l = data.leave;
+                document.getElementById('viewContent').innerHTML = `
+                    <div class="detail-grid">
+                        <div class="detail-row">
+                            <label>Leave Type</label>
+                            <span>${l.leave_type}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Status</label>
+                            <span class="status-badge status-${l.status.toLowerCase()}">${l.status}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Start Date</label>
+                            <span>${l.start_date_formatted}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>End Date</label>
+                            <span>${l.end_date_formatted}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Number of Days</label>
+                            <span>${l.days_count} day(s)</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Applied Date</label>
+                            <span>${l.applied_date_formatted}</span>
+                        </div>
+                        <div class="detail-row full-width">
+                            <label>Reason</label>
+                            <span>${l.reason}</span>
+                        </div>
+                        ${l.remarks ? `
+                        <div class="detail-row full-width">
+                            <label>Admin Remarks</label>
+                            <span>${l.remarks}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                document.getElementById('viewModal').style.display = 'flex';
+            }
+        });
+}
+
+function confirmDelete(id) {
+    if (confirm('Are you sure you want to cancel this leave application?')) {
+        fetch(`/employee/leave/${id}/delete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+    }
+}
+
+function closeModal() {
+    document.getElementById('leaveModal').style.display = 'none';
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+document.getElementById('leaveForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const leaveId = document.getElementById('leave_id').value;
+    const url = leaveId ? '/employee/leave/edit' : '/employee/leave/add';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    });
+});
+
+window.onclick = function(event) {
+    const modal = document.getElementById('leaveModal');
+    const viewModal = document.getElementById('viewModal');
+    if (event.target === modal) closeModal();
+    if (event.target === viewModal) closeViewModal();
+}
+</script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deployment.css') }}">
+<style>
+.leave-container { padding: 20px; }
+.leave-header { margin-bottom: 30px; }
+.leave-header h1 { font-size: 28px; color: var(--primary-red); margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+.leave-header p { color: #666; font-size: 14px; }
+.leave-toolbar { display: flex; gap: 20px; justify-content: flex-end; align-items: center; margin-bottom: 25px; flex-wrap: wrap; }
+.leave-content { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+.leave-table { width: 100%; border-collapse: collapse; }
+.leave-table thead { background: linear-gradient(135deg, var(--primary-red), var(--dark-red)); color: white; }
+.leave-table th { padding: 16px; text-align: left; font-weight: 600; font-size: 14px; }
+.leave-table td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #333; }
+.leave-table tbody tr:hover { background: #f9f9f9; }
+.leave-table .no-data { text-align: center; padding: 40px; color: #999; font-style: italic; }
+</style>
+{% endblock %}
