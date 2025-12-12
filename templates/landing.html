@@ -23,37 +23,82 @@
     {% include 'partials/navbar.html' %}
 
     <section class="hero">
+        <div class="hero-overlay"></div>
         <div class="container">
             <div class="hero-content">
-                <h1>Be one of us! Serve the country, join the PNP!</h1>
-                <p>Your trusted partner in public safety and community service</p>
+                <div class="hero-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Philippine National Police</span>
+                </div>
+                <h1 class="hero-title">Be one of us! Serve the country, join the PNP!</h1>
+                <p class="hero-subtitle">Your trusted partner in public safety and community service</p>
                 {% if not session.get('username') %}
                     <div class="hero-buttons">
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">Get Started</a>
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-large">Sign In</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">
+                            <i class="fas fa-user-plus"></i> Get Started
+                        </a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-large">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </a>
                     </div>
                 {% endif %}
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <h4>500+</h4>
+                            <p>Officers</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-handshake"></i>
+                        <div>
+                            <h4>1000+</h4>
+                            <p>Cases Solved</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-award"></i>
+                        <div>
+                            <h4>24/7</h4>
+                            <p>Service</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <section class="features">
         <div class="container">
+            <div class="section-header">
+                <h2>Why Join PNP San Juan?</h2>
+                <p>Discover the benefits of serving your community</p>
+            </div>
             <div class="feature-grid">
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                    <h3>Security</h3>
-                    <p>Committed to keeping our community safe</p>
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Security & Protection</h3>
+                    <p>Committed to keeping our community safe with 24/7 vigilance and rapid response</p>
+                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-hands-helping"></i></div>
-                    <h3>Community</h3>
-                    <p>Building stronger connections with residents</p>
+                    <div class="feature-icon">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h3>Community Service</h3>
+                    <p>Building stronger connections with residents through outreach programs</p>
+                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                    <h3>Efficiency</h3>
-                    <p>Quick response and reliable service</p>
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Quick Response</h3>
+                    <p>Efficient operations and reliable service when you need us most</p>
+                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
         </div>
