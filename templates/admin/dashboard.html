@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage your system and users</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-icon">👥</div>
+        <h3>Manage Users</h3>
+        <p>View and manage all system users</p>
+        <a href="#" class="btn btn-primary">View Users</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">📋</div>
+        <h3>Applications</h3>
+        <p>Review pending applications</p>
+        <a href="#" class="btn btn-primary">View Applications</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">📊</div>
+        <h3>Reports</h3>
+        <p>View system reports and analytics</p>
+        <a href="#" class="btn btn-primary">View Reports</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">⚙️</div>
+        <h3>Settings</h3>
+        <p>Configure system settings</p>
+        <a href="#" class="btn btn-primary">Configure</a>
+    </div>
+</div>
+{% endblock %}
