@@ -34,7 +34,11 @@
             <div class="nav-links">
                 <div class="profile-dropdown">
                     <button class="profile-btn">
-                        <i class="fas fa-user user-icon"></i>
+                        {% if profile and profile.profile_picture %}
+                            <img src="{{ url_for('static', filename=profile.profile_picture) }}" alt="Profile" class="profile-avatar">
+                        {% else %}
+                            <i class="fas fa-user user-icon"></i>
+                        {% endif %}
                         <span>{{ session['username'] }}</span>
                         <span class="role-badge-small role-applicant">Applicant</span>
                         <i class="fas fa-chevron-down dropdown-arrow"></i>
@@ -91,6 +95,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/profile-preview.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
