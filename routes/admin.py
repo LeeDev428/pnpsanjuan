@@ -86,3 +86,79 @@ def profile():
     conn.close()
     
     return render_template('admin/profile.html', user=user, profile=admin_profile)
+
+@admin_bp.route('/users')
+@login_required
+@role_required('admin')
+def users():
+    tab = request.args.get('tab', 'employees')
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile for navbar
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    if tab == 'employees':
+        # Count total employees
+        cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "employee"')
+        total = cursor.fetchone()['count']
+        
+        # Get paginated employees with profile data
+        cursor.execute('''
+            SELECT u.id, u.username, u.email, u.created_at,
+                   ep.first_name, ep.middle_name, ep.last_name, ep.`rank`, ep.profile_picture
+            FROM users u
+            LEFT JOIN employee_profiles ep ON u.id = ep.user_id
+            WHERE u.role = "employee"
+            ORDER BY u.created_at DESC
+            LIMIT %s OFFSET %s
+        ''', (per_page, offset))
+        users_list = cursor.fetchall()
+        
+        # Count total applicants for badge
+        cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "applicant"')
+        applicant_count = cursor.fetchone()['count']
+        employee_count = total
+        
+    else:  # applicants
+        # Count total applicants
+        cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "applicant"')
+        total = cursor.fetchone()['count']
+        
+        # Get paginated applicants with profile data
+        cursor.execute('''
+            SELECT u.id, u.username, u.email, u.created_at,
+                   ap.first_name, ap.last_name, ap.application_status, ap.profile_picture
+            FROM users u
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            WHERE u.role = "applicant"
+            ORDER BY u.created_at DESC
+            LIMIT %s OFFSET %s
+        ''', (per_page, offset))
+        users_list = cursor.fetchall()
+        
+        # Count total employees for badge
+        cursor.execute('SELECT COUNT(*) as count FROM users WHERE role = "employee"')
+        employee_count = cursor.fetchone()['count']
+        applicant_count = total
+    
+    cursor.close()
+    conn.close()
+    
+    total_pages = (total + per_page - 1) // per_page
+    
+    return render_template('admin/users.html',
+                         users=users_list,
+                         tab=tab,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         employee_count=employee_count,
+                         applicant_count=applicant_count,
+                         profile=profile)
