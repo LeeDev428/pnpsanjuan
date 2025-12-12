@@ -3,9 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PNP San Juan</title>
+    <title>PNP San Juan - Serve the Country</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Landing Page Specific Styles */
+        :root {
+            --pnp-red: #DC143C;
+            --pnp-dark-red: #B11030;
+            --text-dark: #2c3e50;
+            --text-gray: #6c757d;
+            --border-color: #e0e0e0;
+        }
+
+        .landing-hero {
+            background: linear-gradient(135deg, rgba(220, 20, 60, 0.05), rgba(255, 255, 255, 0.95)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23f8f9fa" width="1200" height="600"/></svg>');
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .landing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn-landing {
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-get-started {
+            background: var(--pnp-red);
+            color: white;
+            border: none;
+        }
+
+        .btn-get-started:hover {
+            background: var(--pnp-dark-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+        }
+
+        .btn-explore {
+            background: white;
+            color: var(--pnp-red);
+            border: 2px solid var(--pnp-red);
+        }
+
+        .btn-explore:hover {
+            background: var(--pnp-red);
+            color: white;
+        }
+
+        .emergency-hotline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            max-width: fit-content;
+        }
+
+        .emergency-hotline i {
+            color: var(--pnp-red);
+            font-size: 24px;
+        }
+
+        .emergency-hotline .hotline-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .emergency-hotline .hotline-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .emergency-hotline .hotline-numbers {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .hero-image {
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Mission & Vision Section */
+        .mission-vision {
+            padding: 60px 0;
+            background: white;
+        }
+
+        .mv-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .mv-card {
+            padding: 30px;
+            border-left: 4px solid var(--pnp-red);
+            background: #f8f9fa;
+        }
+
+        .mv-card h2 {
+            color: var(--pnp-red);
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .mv-card p {
+            color: var(--text-gray);
+            line-height: 1.8;
+        }
+
+        /* Services Section */
+        .services-section {
+            padding: 60px 0;
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 36px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--pnp-red);
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(220, 20, 60, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .service-icon i {
+            font-size: 28px;
+            color: var(--pnp-red);
+        }
+
+        .service-card h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .service-card p {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 15px;
+        }
+
+        .service-link {
+            color: var(--pnp-red);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Why Join Section */
+        .why-join {
+            padding: 60px 0;
+            background: white;
+        }
+
+        .why-join-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .benefits-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: start;
+            gap: 15px;
+        }
+
+        .benefits-list i {
+            color: var(--pnp-red);
+            font-size: 20px;
+            margin-top: 3px;
+        }
+
+        .application-steps {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .application-steps h3 {
+            color: var(--pnp-red);
+            margin-bottom: 20px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--pnp-red);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .apply-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--pnp-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .apply-btn:hover {
+            background: var(--pnp-dark-red);
+        }
+
+        /* Testimonial */
+        .testimonial {
+            padding: 60px 0;
+            background: rgba(220, 20, 60, 0.05);
+        }
+
+        .testimonial-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .testimonial-quote {
+            font-size: 24px;
+            font-style: italic;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--pnp-red);
+        }
+
+        /* Announcements & Emergency */
+        .bottom-section {
+            padding: 60px 0;
+            background: white;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+        }
+
+        .announcements-box {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .announcements-box h3 {
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 300px;
+            background: #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-gray);
+        }
+
+        .location-text {
+            margin-top: 15px;
+            color: var(--text-gray);
+        }
+
+        .emergency-contacts {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .schedule-badge {
+            background: var(--pnp-red);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .emergency-contacts h3 {
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-label {
+            font-size: 12px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .contact-value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .social-links {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .social-links h4 {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            border-color: var(--pnp-red);
+            background: rgba(220, 20, 60, 0.05);
+        }
+
+        .social-btn i {
+            font-size: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .hero-grid,
+            .mv-grid,
+            .why-join-content,
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .services-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-text h1 {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Toast Container -->
@@ -22,83 +518,249 @@
     
     {% include 'partials/navbar.html' %}
 
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Philippine National Police</span>
-                </div>
-                <h1 class="hero-title">Be one of us! Serve the country, join the PNP!</h1>
-                <p class="hero-subtitle">Your trusted partner in public safety and community service</p>
-                {% if not session.get('username') %}
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="landing-container">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <h1>Be one of us! Serve the country, join the PNP!</h1>
+                    <p>Your trusted partner in public safety and community service – responsive, accountable, and community-first.</p>
+                    
                     <div class="hero-buttons">
-                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">
-                            <i class="fas fa-user-plus"></i> Get Started
+                        <a href="{{ url_for('auth.register') }}" class="btn-landing btn-get-started">
+                            Get Started
                         </a>
-                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-large">
-                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        <a href="#services" class="btn-landing btn-explore">
+                            Explore Services
                         </a>
                     </div>
-                {% endif %}
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <i class="fas fa-users"></i>
-                        <div>
-                            <h4>500+</h4>
-                            <p>Officers</p>
+                    
+                    <div class="emergency-hotline">
+                        <i class="fas fa-phone-alt"></i>
+                        <div class="hotline-text">
+                            <span class="hotline-label">Emergency Hotline</span>
+                            <span class="hotline-numbers">(02) 724 2315 — 63 988 9674371</span>
                         </div>
                     </div>
-                    <div class="stat-item">
-                        <i class="fas fa-handshake"></i>
-                        <div>
-                            <h4>1000+</h4>
-                            <p>Cases Solved</p>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-award"></i>
-                        <div>
-                            <h4>24/7</h4>
-                            <p>Service</p>
-                        </div>
-                    </div>
+                </div>
+                
+                <div class="hero-image">
+                    <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=600&h=700&fit=crop" alt="PNP Officer" style="object-fit: cover; height: 500px;">
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Why Join PNP San Juan?</h2>
-                <p>Discover the benefits of serving your community</p>
+    <!-- Mission & Vision -->
+    <section class="mission-vision">
+        <div class="landing-container">
+            <div class="mv-grid">
+                <div class="mv-card">
+                    <h2>Mission</h2>
+                    <p>To protect life and property, maintain peace and order, prevent and control crime, and ensure public safety and internal security with the active support of the community.</p>
+                </div>
+                <div class="mv-card">
+                    <h2>Vision</h2>
+                    <p>A safe and secure San Juan community, built on trust and cooperation between police and citizens.</p>
+                </div>
             </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section" id="services">
+        <div class="landing-container">
+            <div class="section-title">
+                <h2>Services</h2>
+            </div>
+            
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-file-alt"></i>
                     </div>
-                    <h3>Security & Protection</h3>
-                    <p>Committed to keeping our community safe with 24/7 vigilance and rapid response</p>
-                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    <h3>Police Clearance</h3>
+                    <p>Apply for on recruitment or employment purposes</p>
+                    <a href="{{ url_for('auth.login') }}" class="service-link">
+                        Apply now <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-hands-helping"></i>
+                
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <h3>Community Service</h3>
-                    <p>Building stronger connections with residents through outreach programs</p>
-                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    <h3>Blotter & Reports</h3>
+                    <p>File a past of document incident or complaint</p>
+                    <a href="{{ url_for('auth.login') }}" class="service-link">
+                        File now <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-bolt"></i>
+                
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
-                    <h3>Quick Response</h3>
-                    <p>Efficient operations and reliable service when you need us most</p>
-                    <a href="#" class="feature-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    <h3>Verification Services</h3>
+                    <p>Apply Verisimile-B and Verisimile-A</p>
+                    <a href="{{ url_for('auth.login') }}" class="service-link">
+                        Apply now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Community Programs</h3>
+                    <p>Community leadership and civic training</p>
+                    <a href="{{ url_for('auth.login') }}" class="service-link">
+                        Learn more <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join the PNP -->
+    <section class="why-join">
+        <div class="landing-container">
+            <div class="why-join-content">
+                <div>
+                    <h2 style="color: var(--pnp-red); font-size: 32px; margin-bottom: 30px;">Why Join the PNP?</h2>
+                    <ul class="benefits-list">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Competitive Benefits and Allowance</strong>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Structured Training Career Paths</strong>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Opportunities for Specializations</strong>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="application-steps">
+                    <h3>Application Steps</h3>
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Apply it now it later</h4>
+                            <p>Submit online or in-person</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Take the exams</h4>
+                            <p>Physical or written exams</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>In-person or online interview</h4>
+                            <p>Undergo screening</p>
+                        </div>
+                    </div>
+                    <button class="apply-btn" onclick="window.location.href='{{ url_for('auth.register') }}'">
+                        Start Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial -->
+    <section class="testimonial">
+        <div class="landing-container">
+            <div class="testimonial-content">
+                <p class="testimonial-quote">
+                    "My dedication execute determined the accomplice to ensuring for personal for. facilitates to security to this empowers."
+                </p>
+                <p class="testimonial-author">— Jeremia Cayme - Anticaque Bayanp</p>
+                <p style="font-style: italic; color: var(--text-gray); margin-top: 10px;">
+                    "I literally sched visited my appointment online and for medical leg. facilities were too good."
+                </p>
+                <p class="testimonial-author">— President</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Latest Announcements & Emergency -->
+    <section class="bottom-section">
+        <div class="landing-container">
+            <div class="bottom-grid">
+                <div class="announcements-box">
+                    <h3>Latest Announcements</h3>
+                    <div class="map-placeholder">
+                        <div style="text-align: center;">
+                            <i class="fas fa-map-marked-alt" style="font-size: 48px; color: #999;"></i>
+                            <p style="margin-top: 10px;">Map Location</p>
+                        </div>
+                    </div>
+                    <p class="location-text">
+                        <strong>Location:</strong> Santolan Road, Greenillia Nutyh City, Sanjuan City
+                    </p>
+                </div>
+                
+                <div class="emergency-contacts">
+                    <span class="schedule-badge">24/7 SCHEDULE</span>
+                    <h3>Emergency</h3>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Hotline</div>
+                        <div class="contact-value">002 114 Hotline</div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Main</div>
+                        <div class="contact-value">63 Mak — na (telus Fonda)</div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Telephone</div>
+                        <div class="contact-value">(ours_ tiressa Infoteleisintembe)</div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Email</div>
+                        <div class="contact-value">Email meiler</div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Send</div>
+                        <div class="contact-value">Email messtage</div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-label">Message</div>
+                        <div class="contact-value">Computer collectient</div>
+                    </div>
+                    
+                    <div class="social-links">
+                        <h4>Social</h4>
+                        <div class="social-buttons">
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-facebook"></i>
+                                <span>Facebook</span>
+                            </a>
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-twitter"></i>
+                                <span>Twitter</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
