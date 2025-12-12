@@ -1,0 +1,129 @@
+{% extends "employee/base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <h1>PROFILE</h1>
+</div>
+
+<form method="POST" class="profile-form">
+    <div class="profile-grid">
+        <!-- Left Column: Profile Picture -->
+        <div class="profile-picture-section">
+            <div class="profile-picture">
+                <div class="avatar-circle"></div>
+            </div>
+            <div class="profile-name">
+                <p><strong>Name:</strong> {{ profile.first_name or '' }} {{ profile.middle_name or '' }} {{ profile.last_name or '' }}</p>
+                <p><strong>Rank:</strong> {{ profile.rank or 'N/A' }}</p>
+            </div>
+        </div>
+
+        <!-- Right Column: General Information -->
+        <div class="profile-info-section">
+            <h2>I. General Information</h2>
+            <div class="form-grid-3col">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ profile.first_name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="unit">Unit</label>
+                    <input type="text" id="unit" name="unit" value="{{ profile.unit or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="middle_name">Middle Name</label>
+                    <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="station">Station</label>
+                    <input type="text" id="station" name="station" value="{{ profile.station or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" value="{{ profile.address or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="suffix">Suffix</label>
+                    <input type="text" id="suffix" name="suffix" value="{{ profile.suffix or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="rank">Rank</label>
+                    <input type="text" id="rank" name="rank" value="{{ profile.rank or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="home_address">Home Address</label>
+                    <input type="text" id="home_address" name="home_address" value="{{ profile.home_address or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender">
+                        <option value="">Select</option>
+                        <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile.date_of_birth or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="place_of_birth">Place of Birth</label>
+                    <input type="text" id="place_of_birth" name="place_of_birth" value="{{ profile.place_of_birth or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="religion">Religion</label>
+                    <input type="text" id="religion" name="religion" value="{{ profile.religion or '' }}">
+                </div>
+            </div>
+
+            <h3>Emergency Contact:</h3>
+            <div class="form-grid-3col">
+                <div class="form-group">
+                    <label for="emergency_contact_name">Name:</label>
+                    <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ profile.emergency_contact_name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="emergency_relationship">Relationship:</label>
+                    <input type="text" id="emergency_relationship" name="emergency_relationship" value="{{ profile.emergency_relationship or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="emergency_contact_number">Contact #:</label>
+                    <input type="text" id="emergency_contact_number" name="emergency_contact_number" value="{{ profile.emergency_contact_number or '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Background Section -->
+    <div class="section-box">
+        <h2>II. Educational Background</h2>
+        <p class="section-note">Add your educational details here (Coming soon)</p>
+    </div>
+
+    <!-- Schooling Records Section -->
+    <div class="section-box">
+        <h2>III. Schooling Records</h2>
+        <p class="section-note">Add your schooling records here (Coming soon)</p>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-large">Save Changes</button>
+        <a href="{{ url_for('employee.dashboard') }}" class="btn btn-outline btn-large">Cancel</a>
+    </div>
+</form>
+{% endblock %}
