@@ -379,7 +379,7 @@ function viewUser(userId, role) {
                         <div class="detail-row full-width profile-picture-section">
                             <strong>Profile Picture:</strong>
                             <div class="profile-picture-container">
-                                <img src="${user.profile_picture.startsWith('/') ? user.profile_picture : '/' + user.profile_picture}" 
+                                <img src="/static/${user.profile_picture}" 
                                      alt="${user.username}" 
                                      class="profile-picture-large"
                                      onclick="zoomImage(this.src)">
