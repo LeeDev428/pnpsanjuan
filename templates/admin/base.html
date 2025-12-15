@@ -83,6 +83,10 @@
                     <i class="fas fa-map-marker-alt icon"></i>
                     <span>Deployment</span>
                 </a>
+                <a href="{{ url_for('admin.leave_applications') }}" class="sidebar-link {% if request.endpoint == 'admin.leave_applications' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt icon"></i>
+                    <span>Leave Applications</span>
+                </a>
                 <a href="{{ url_for('admin.reports') }}" class="sidebar-link {% if request.endpoint == 'admin.reports' %}active{% endif %}">
                     <i class="fas fa-file-alt icon"></i>
                     <span>Generate Reports</span>
