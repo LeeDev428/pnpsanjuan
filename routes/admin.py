@@ -1306,20 +1306,7 @@ def contact_support():
     cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
     profile = cursor.fetchone()
     
-    # Get all support requests from notifications
-    cursor.execute('''
-        SELECT n.id, n.title, n.message, n.is_read, n.created_at, n.related_id,
-               u.username as applicant_name, 
-               COALESCE(ap.email, u.email) as applicant_email
-        FROM notifications n
-        JOIN users u ON n.user_id = %s
-        LEFT JOIN users applicant_users ON n.related_id = applicant_users.id
-        LEFT JOIN applicant_profiles ap ON applicant_users.id = ap.user_id
-        WHERE n.type = 'general' AND n.title LIKE 'Support Request:%%'
-        ORDER BY n.created_at DESC
-    ''', (session['user_id'],))
-    
-    # Get requests from the proper source
+    # Get all support requests from applicants
     cursor.execute('''
         SELECT n.*, u.username as applicant_name,
                COALESCE(ap.email, u.email) as applicant_email
