@@ -47,44 +47,22 @@ def login():
         if user and check_password_hash(user['password'], password):
             # Check if user account is active
             if user.get('status') != 'active':
-                flash('Your account is not active. Please contact support.', 'error')
+                flash('Your account is not active. Please verify your email first.', 'error')
                 return render_template('login.html')
             
-            # Check if 2FA is enabled for this user
-            two_factor_enabled = user.get('two_factor_enabled', True)
+            # Log in directly (OTP already verified during registration)
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = user['role']
+            flash('Login successful!', 'success')
             
-            if two_factor_enabled:
-                # Generate and send OTP
-                otp_code = generate_otp()
-                
-                # Store OTP in database
-                if store_otp(user['id'], otp_code):
-                    # Send OTP via email
-                    if send_otp_email(user['email'], otp_code, user['username']):
-                        # Store user info in session temporarily (not fully logged in yet)
-                        session['pending_2fa_user_id'] = user['id']
-                        session['pending_2fa_username'] = user['username']
-                        session['pending_2fa_role'] = user['role']
-                        flash('A verification code has been sent to your email.', 'success')
-                        return redirect(url_for('auth.verify_otp'))
-                    else:
-                        flash('Failed to send verification code. Please try again.', 'error')
-                else:
-                    flash('An error occurred. Please try again.', 'error')
+            # Redirect based on role
+            if user['role'] == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif user['role'] == 'employee':
+                return redirect(url_for('employee.dashboard'))
             else:
-                # 2FA disabled, log in directly
-                session['user_id'] = user['id']
-                session['username'] = user['username']
-                session['role'] = user['role']
-                flash('Login successful!', 'success')
-                
-                # Redirect based on role
-                if user['role'] == 'admin':
-                    return redirect(url_for('admin.dashboard'))
-                elif user['role'] == 'employee':
-                    return redirect(url_for('employee.dashboard'))
-                else:
-                    return redirect(url_for('applicant.dashboard'))
+                return redirect(url_for('applicant.dashboard'))
         else:
             flash('Invalid username or password', 'error')
     
