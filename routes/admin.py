@@ -586,10 +586,33 @@ def update_leave_status():
     cursor = conn.cursor(dictionary=True)
     
     try:
+        # Get leave details for notification
+        cursor.execute('''
+            SELECT la.employee_id, la.leave_type, la.start_date, la.end_date, u.username
+            FROM leave_applications la
+            JOIN users u ON la.employee_id = u.id
+            WHERE la.id = %s
+        ''', (leave_id,))
+        leave = cursor.fetchone()
+        
+        # Update leave status
         cursor.execute(
             'UPDATE leave_applications SET status = %s, remarks = %s WHERE id = %s',
             (status, remarks, leave_id)
         )
+        
+        # Create notification for employee
+        if leave:
+            notif_title = f'Leave Application {status}'
+            notif_message = f'Your {leave["leave_type"]} from {leave["start_date"].strftime("%b %d, %Y")} to {leave["end_date"].strftime("%b %d, %Y")} has been {status.lower()}.'
+            if remarks:
+                notif_message += f' Remarks: {remarks}'
+            
+            cursor.execute('''
+                INSERT INTO notifications (user_id, title, message, type, related_id)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (leave['employee_id'], notif_title, notif_message, 'leave', leave_id))
+        
         conn.commit()
         cursor.close()
         conn.close()
