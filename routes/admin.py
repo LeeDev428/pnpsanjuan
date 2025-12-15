@@ -473,6 +473,109 @@ def edit_applicant():
         conn.close()
         return {'success': False, 'message': f'Error updating applicant: {str(e)}'}
 
+@admin_bp.route('/leave_applications')
+@login_required
+@role_required('admin')
+def leave_applications():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+    
+    # Get all leave applications with employee details
+    cursor.execute('''
+        SELECT la.*,
+               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as employee_name,
+               ep.`rank`
+        FROM leave_applications la
+        JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        ORDER BY la.applied_date DESC
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
+    leaves = cursor.fetchall()
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM leave_applications')
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/leave_applications.html',
+                         leaves=leaves,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages,
+                         profile=profile)
+
+@admin_bp.route('/leave/<int:leave_id>/get')
+@login_required
+@role_required('admin')
+def get_leave(leave_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('''
+        SELECT la.*,
+               DATE_FORMAT(la.start_date, '%b %d, %Y') as start_date_formatted,
+               DATE_FORMAT(la.end_date, '%b %d, %Y') as end_date_formatted,
+               DATE_FORMAT(la.applied_date, '%b %d, %Y') as applied_date_formatted,
+               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as employee_name,
+               ep.`rank`
+        FROM leave_applications la
+        JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        WHERE la.id = %s
+    ''', (leave_id,))
+    leave = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    if not leave:
+        return {'success': False, 'message': 'Leave application not found'}, 404
+    
+    return {'success': True, 'leave': leave}
+
+@admin_bp.route('/leave/update-status', methods=['POST'])
+@login_required
+@role_required('admin')
+def update_leave_status():
+    leave_id = request.form.get('leave_id')
+    status = request.form.get('status')
+    remarks = request.form.get('remarks')
+    
+    if not all([leave_id, status]):
+        return {'success': False, 'message': 'Missing required fields'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute(
+            'UPDATE leave_applications SET status = %s, remarks = %s WHERE id = %s',
+            (status, remarks, leave_id)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': f'Leave application {status.lower()} successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error updating leave status: {str(e)}'}
+
 @admin_bp.route('/deployment')
 @login_required
 @role_required('admin')
