@@ -172,16 +172,36 @@ def leave_applications():
     cursor.execute('SELECT profile_picture FROM employee_profiles WHERE user_id = %s', (session['user_id'],))
     profile = cursor.fetchone()
     
+    # Calculate leave balance (15 days per year)
+    from datetime import datetime
+    current_year = datetime.now().year
+    
+    # Get approved leaves for current year
+    cursor.execute('''
+        SELECT COALESCE(SUM(days_count), 0) as used_days
+        FROM leave_applications
+        WHERE employee_id = %s 
+        AND status = 'Approved'
+        AND YEAR(start_date) = %s
+    ''', (session['user_id'], current_year))
+    
+    used_days = cursor.fetchone()['used_days'] or 0
+    total_annual_leave = 15
+    remaining_leave = total_annual_leave - used_days
+    
     # Pagination
     page = request.args.get('page', 1, type=int)
     per_page = 20
     offset = (page - 1) * per_page
     
-    # Get leave applications
+    # Get leave applications with employee details
     cursor.execute('''
-        SELECT * FROM leave_applications
-        WHERE employee_id = %s
-        ORDER BY applied_date DESC
+        SELECT la.*, ep.rank, u.username as employee_name
+        FROM leave_applications la
+        LEFT JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        LEFT JOIN users u ON la.employee_id = u.id
+        WHERE la.employee_id = %s
+        ORDER BY la.applied_date DESC
         LIMIT %s OFFSET %s
     ''', (session['user_id'], per_page, offset))
     leaves = cursor.fetchall()
@@ -200,7 +220,11 @@ def leave_applications():
                          per_page=per_page,
                          total=total,
                          total_pages=total_pages,
-                         profile=profile)
+                         profile=profile,
+                         total_annual_leave=total_annual_leave,
+                         used_leave=used_days,
+                         remaining_leave=remaining_leave,
+                         current_year=current_year)
 
 @employee_bp.route('/leave/add', methods=['POST'])
 @login_required
@@ -363,3 +387,81 @@ def delete_leave(leave_id):
         cursor.close()
         conn.close()
         return {'success': False, 'message': f'Error cancelling leave: {str(e)}'}
+
+@employee_bp.route('/notifications/get')
+@login_required
+@role_required('employee')
+def get_notifications():
+    """Get recent notifications for employee"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT id, title, message, type, related_id, is_read, created_at
+            FROM notifications
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 50
+        ''', (session['user_id'],))
+        
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'notifications': notifications}
+    
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e), 'notifications': []}
+
+@employee_bp.route('/notifications/<int:notif_id>/read', methods=['POST'])
+@login_required
+@role_required('employee')
+def mark_notification_read(notif_id):
+    """Mark a single notification as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE id = %s AND user_id = %s',
+            (notif_id, session['user_id'])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
+
+@employee_bp.route('/notifications/read-all', methods=['POST'])
+@login_required
+@role_required('employee')
+def mark_all_notifications_read():
+    """Mark all notifications as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE user_id = %s AND is_read = FALSE',
+            (session['user_id'],)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
