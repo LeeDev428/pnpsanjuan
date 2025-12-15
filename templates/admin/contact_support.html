@@ -1,0 +1,673 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Contact Support Requests{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-headset"></i> Contact Support Requests</h1>
+    <p>Manage support requests from applicants</p>
+</div>
+
+<div class="filters-bar">
+    <div class="filter-group">
+        <select id="statusFilter" class="filter-select" onchange="filterRequests()">
+            <option value="all">All Status</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+        </select>
+        <select id="subjectFilter" class="filter-select" onchange="filterRequests()">
+            <option value="all">All Subjects</option>
+            <option value="Profile Edit Request">Profile Edit Request</option>
+            <option value="Application Status Inquiry">Application Status Inquiry</option>
+            <option value="Document Submission">Document Submission</option>
+            <option value="Technical Issue">Technical Issue</option>
+            <option value="Other">Other Concern</option>
+        </select>
+    </div>
+    <div class="stats-summary">
+        <span class="stat-item">
+            <i class="fas fa-envelope"></i> Total: <strong>{{ total_requests }}</strong>
+        </span>
+        <span class="stat-item">
+            <i class="fas fa-envelope-open"></i> Unread: <strong>{{ unread_requests }}</strong>
+        </span>
+    </div>
+</div>
+
+<div class="table-container">
+    {% if support_requests %}
+        <table class="data-table" id="supportTable">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Applicant</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in support_requests %}
+                <tr data-status="{{ 'read' if request.is_read else 'unread' }}" 
+                    data-subject="{{ request.title.replace('Support Request: ', '') }}"
+                    class="{% if not request.is_read %}unread-row{% endif %}">
+                    <td>
+                        {% if request.is_read %}
+                            <span class="status-badge status-read">
+                                <i class="fas fa-check-circle"></i> Read
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-unread">
+                                <i class="fas fa-envelope"></i> Unread
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="applicant-info">
+                            <strong>{{ request.applicant_name }}</strong>
+                            <small>{{ request.applicant_email }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="subject-tag">
+                            {{ request.title.replace('Support Request: ', '') }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="message-preview">
+                            {{ request.message[:100] }}{% if request.message|length > 100 %}...{% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            <i class="fas fa-clock"></i>
+                            {{ request.created_at.strftime('%b %d, %Y') }}<br>
+                            <small>{{ request.created_at.strftime('%I:%M %p') }}</small>
+                        </div>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn-action btn-view" onclick="viewRequest({{ request.id }})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        {% if not request.is_read %}
+                        <button class="btn-action btn-mark-read" onclick="markAsRead({{ request.id }})" title="Mark as Read">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        {% endif %}
+                        <button class="btn-action btn-reply" onclick="replyToRequest('{{ request.applicant_email }}', '{{ request.applicant_name }}')" title="Reply via Email">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-data">
+            <i class="fas fa-inbox"></i>
+            <h3>No Support Requests</h3>
+            <p>There are no support requests from applicants yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- View Request Modal -->
+<div id="viewRequestModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-envelope-open-text"></i> Support Request Details</h2>
+            <button class="close-btn" onclick="closeViewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="requestDetails">
+            <!-- Content loaded dynamically -->
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeViewModal()">Close</button>
+            <button class="btn-submit" id="replyBtn">
+                <i class="fas fa-reply"></i> Reply via Email
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterRequests() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const subjectFilter = document.getElementById('subjectFilter').value;
+    const rows = document.querySelectorAll('#supportTable tbody tr');
+    
+    rows.forEach(row => {
+        const status = row.dataset.status;
+        const subject = row.dataset.subject;
+        
+        let showStatus = statusFilter === 'all' || status === statusFilter;
+        let showSubject = subjectFilter === 'all' || subject === subjectFilter;
+        
+        row.style.display = (showStatus && showSubject) ? '' : 'none';
+    });
+}
+
+function viewRequest(requestId) {
+    fetch(`/admin/contact-support/${requestId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const request = data.request;
+                document.getElementById('requestDetails').innerHTML = `
+                    <div class="request-detail">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-user"></i> Applicant Information</h4>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <label>Name:</label>
+                                    <span>${request.applicant_name}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Email:</label>
+                                    <span>${request.applicant_email}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Date Submitted:</label>
+                                    <span>${new Date(request.created_at).toLocaleString()}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Status:</label>
+                                    <span class="status-badge status-${request.is_read ? 'read' : 'unread'}">
+                                        ${request.is_read ? 'Read' : 'Unread'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4><i class="fas fa-tag"></i> Subject</h4>
+                            <p class="subject-text">${request.title.replace('Support Request: ', '')}</p>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4><i class="fas fa-comment-alt"></i> Message</h4>
+                            <div class="message-content">
+                                ${request.message}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('replyBtn').onclick = function() {
+                    replyToRequest(request.applicant_email, request.applicant_name);
+                };
+                
+                document.getElementById('viewRequestModal').style.display = 'flex';
+                
+                // Auto mark as read
+                if (!request.is_read) {
+                    markAsRead(requestId, false);
+                }
+            } else {
+                showToast(data.message || 'Failed to load request', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error loading request details', 'error');
+        });
+}
+
+function closeViewModal() {
+    document.getElementById('viewRequestModal').style.display = 'none';
+}
+
+function markAsRead(requestId, showNotification = true) {
+    fetch(`/admin/contact-support/${requestId}/mark-read`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (showNotification) {
+                showToast('Marked as read', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function replyToRequest(email, name) {
+    window.location.href = `mailto:${email}?subject=Re: Support Request - PNP San Juan&body=Dear ${name},%0D%0A%0D%0A`;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('viewRequestModal');
+    if (event.target == modal) {
+        closeViewModal();
+    }
+}
+</script>
+
+<style>
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.filters-bar {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    min-width: 180px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+.stats-summary {
+    display: flex;
+    gap: 25px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #495057;
+    font-size: 14px;
+}
+
+.stat-item i {
+    color: var(--primary-red);
+}
+
+.stat-item strong {
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table tbody tr {
+    transition: background 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.unread-row {
+    background: #fff3cd20;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.status-read {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-unread {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.applicant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.applicant-info strong {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.applicant-info small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.subject-tag {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.message-preview {
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.date-info {
+    color: #495057;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.date-info i {
+    color: var(--primary-red);
+    margin-right: 5px;
+}
+
+.date-info small {
+    color: #6c757d;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.btn-view {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-view:hover {
+    background: #1976d2;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-mark-read {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.btn-mark-read:hover {
+    background: #28a745;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-reply {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.btn-reply:hover {
+    background: #ffc107;
+    color: white;
+    transform: scale(1.1);
+}
+
+.no-data {
+    padding: 80px 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.no-data i {
+    font-size: 64px;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.no-data h3 {
+    margin: 15px 0 10px 0;
+    color: #495057;
+}
+
+.no-data p {
+    margin: 0;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--primary-red) 0%, #c62828 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-actions {
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+}
+
+.btn-submit {
+    padding: 10px 20px;
+    border: none;
+    background: var(--primary-red);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-submit:hover {
+    background: #c62828;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.request-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.detail-section h4 {
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.detail-section h4 i {
+    color: var(--primary-red);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.detail-item span {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.subject-text {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.message-content {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-red);
+    color: #495057;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+</style>
+{% endblock %}
