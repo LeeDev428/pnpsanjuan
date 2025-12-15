@@ -30,9 +30,6 @@ def profile():
     cursor = conn.cursor(dictionary=True)
     
     if request.method == 'POST':
-        first_name = request.form.get('first_name')
-        middle_name = request.form.get('middle_name')
-        last_name = request.form.get('last_name')
         email = request.form.get('email')
         phone = request.form.get('phone')
         
@@ -60,19 +57,19 @@ def profile():
             
             if profile_picture:
                 cursor.execute('''UPDATE admin_profiles SET 
-                    first_name=%s, middle_name=%s, last_name=%s, email=%s, phone=%s, profile_picture=%s
+                    email=%s, phone=%s, profile_picture=%s
                     WHERE user_id=%s''',
-                    (first_name, middle_name, last_name, email, phone, profile_picture, session['user_id']))
+                    (email, phone, profile_picture, session['user_id']))
             else:
                 cursor.execute('''UPDATE admin_profiles SET 
-                    first_name=%s, middle_name=%s, last_name=%s, email=%s, phone=%s
+                    email=%s, phone=%s
                     WHERE user_id=%s''',
-                    (first_name, middle_name, last_name, email, phone, session['user_id']))
+                    (email, phone, session['user_id']))
         else:
             cursor.execute('''INSERT INTO admin_profiles 
-                (user_id, first_name, middle_name, last_name, email, phone, profile_picture)
-                VALUES (%s,%s,%s,%s,%s,%s,%s)''',
-                (session['user_id'], first_name, middle_name, last_name, email, phone, profile_picture))
+                (user_id, email, phone, profile_picture)
+                VALUES (%s,%s,%s,%s)''',
+                (session['user_id'], email, phone, profile_picture))
         
         conn.commit()
         flash('Profile updated successfully!', 'success')
@@ -112,7 +109,7 @@ def users():
         
         # Get paginated employees with profile data
         cursor.execute('''
-            SELECT u.id, u.username, u.email, u.created_at,
+            SELECT u.id, u.username, u.email, u.created_at, u.status,
                    ep.first_name, ep.middle_name, ep.last_name, ep.`rank`, ep.profile_picture
             FROM users u
             LEFT JOIN employee_profiles ep ON u.id = ep.user_id
@@ -436,6 +433,46 @@ def update_applicant_status():
         conn.close()
         return {'success': False, 'message': f'Error updating status: {str(e)}'}
 
+@admin_bp.route('/recruitment/edit', methods=['POST'])
+@login_required
+@role_required('admin')
+def edit_applicant():
+    applicant_id = request.form.get('applicant_id')
+    first_name = request.form.get('first_name')
+    middle_name = request.form.get('middle_name')
+    last_name = request.form.get('last_name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    address = request.form.get('address')
+    date_of_birth = request.form.get('date_of_birth')
+    
+    if not all([applicant_id, first_name, last_name, email]):
+        return {'success': False, 'message': 'Required fields missing'}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            UPDATE applicant_profiles 
+            SET first_name = %s, middle_name = %s, last_name = %s, 
+                email = %s, phone = %s, address = %s, date_of_birth = %s
+            WHERE user_id = %s
+        ''', (first_name, middle_name, last_name, email, phone, address, 
+              date_of_birth if date_of_birth else None, applicant_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'message': 'Applicant information updated successfully'}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': f'Error updating applicant: {str(e)}'}
+
 @admin_bp.route('/deployment')
 @login_required
 @role_required('admin')
@@ -577,8 +614,8 @@ def get_deployment(deployment_id):
     
     cursor.execute('''
         SELECT d.*,
-               DATE_FORMAT(d.start_date, '%%b %%d, %%Y') as start_date_formatted,
-               DATE_FORMAT(d.end_date, '%%b %%d, %%Y') as end_date_formatted,
+               DATE_FORMAT(d.start_date, '%b %d, %Y') as start_date_formatted,
+               DATE_FORMAT(d.end_date, '%b %d, %Y') as end_date_formatted,
                CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as officer_name,
                ep.`rank`
         FROM deployments d
