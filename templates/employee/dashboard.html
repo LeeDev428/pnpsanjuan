@@ -4,37 +4,570 @@
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>Employee Dashboard</h1>
-    <p>Welcome back, {{ session['username'] }}</p>
+    <h1><i class="fas fa-home"></i> Employee Dashboard</h1>
+    <p>Welcome back, {{ session['username'] }}{% if profile and profile.rank %} - {{ profile.rank }}{% endif %}</p>
 </div>
 
-<div class="dashboard-grid">
-    <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-user-circle"></i></div>
-        <h3>My Profile</h3>
-        <p>View and edit your profile information</p>
-        <a href="{{ url_for('employee.profile') }}" class="btn btn-primary">View Profile</a>
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card stat-blue">
+        <div class="stat-icon">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ 15 - used_leave }}<span class="stat-small">/15</span></h3>
+            <p>Leave Days Remaining</p>
+            <span class="stat-detail">{{ current_year }}</span>
+        </div>
     </div>
-
-    <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
-        <h3>Schedule</h3>
-        <p>Check your work schedule</p>
-        <a href="#" class="btn btn-primary">View Schedule</a>
+    
+    <div class="stat-card stat-orange">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ pending_leaves }}</h3>
+            <p>Pending Leave Requests</p>
+            <span class="stat-detail">Awaiting approval</span>
+        </div>
     </div>
-
-    <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-file-alt"></i></div>
-        <h3>Reports</h3>
-        <p>Submit and view reports</p>
-        <a href="#" class="btn btn-primary">View Reports</a>
+    
+    <div class="stat-card stat-green">
+        <div class="stat-icon">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ used_leave }}</h3>
+            <p>Used Leave Days</p>
+            <span class="stat-detail">This year</span>
+        </div>
     </div>
-
-    <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-bullhorn"></i></div>
-        <h3>Announcements</h3>
-        <p>View latest announcements</p>
-        <a href="#" class="btn btn-primary">View All</a>
+    
+    <div class="stat-card stat-purple">
+        <div class="stat-icon">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ unread_notifs }}</h3>
+            <p>Unread Notifications</p>
+            <span class="stat-detail">Click bell to view</span>
+        </div>
     </div>
 </div>
+
+<!-- Current Deployment -->
+{% if current_deployment %}
+<div class="deployment-section">
+    <h2><i class="fas fa-map-marker-alt"></i> Current Deployment</h2>
+    <div class="deployment-card active">
+        <div class="deployment-header">
+            <div class="deployment-badge">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>ACTIVE</span>
+            </div>
+            <span class="deployment-date">Since {{ current_deployment.deployment_formatted }}</span>
+        </div>
+        <div class="deployment-body">
+            <h3>{{ current_deployment.location }}</h3>
+            <p><strong>Assignment:</strong> {{ current_deployment.assignment }}</p>
+            {% if current_deployment.remarks %}
+            <p><strong>Remarks:</strong> {{ current_deployment.remarks }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="quick-actions-section">
+    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+    <div class="actions-grid">
+        <a href="{{ url_for('employee.leave_applications') }}" class="action-card">
+            <i class="fas fa-calendar-plus"></i>
+            <h4>Apply for Leave</h4>
+            <p>{{ remaining_leave }} days available</p>
+        </a>
+        <a href="{{ url_for('employee.profile') }}" class="action-card">
+            <i class="fas fa-user-edit"></i>
+            <h4>Update Profile</h4>
+            <p>Manage your information</p>
+        </a>
+        <a href="{{ url_for('employee.personal_records') }}" class="action-card">
+            <i class="fas fa-id-card"></i>
+            <h4>Personal Records</h4>
+            <p>View your records</p>
+        </a>
+        <a href="{{ url_for('employee.leave_applications') }}" class="action-card">
+            <i class="fas fa-history"></i>
+            <h4>Leave History</h4>
+            <p>View past leaves</p>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Leave Applications -->
+<div class="recent-section">
+    <h2><i class="fas fa-calendar-alt"></i> Recent Leave Applications</h2>
+    <div class="recent-list">
+        {% if recent_leaves %}
+            {% for leave in recent_leaves %}
+            <div class="recent-item">
+                <div class="leave-icon {{ leave.status|lower }}">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="leave-details">
+                    <h4>{{ leave.leave_type }}</h4>
+                    <p>{{ leave.start_formatted }} to {{ leave.end_formatted }} ({{ leave.days_count }} days)</p>
+                    <div class="leave-meta">
+                        <span class="status-badge status-{{ leave.status|lower }}">{{ leave.status }}</span>
+                        {% if leave.remarks %}
+                        <span class="remarks-badge" title="{{ leave.remarks }}">
+                            <i class="fas fa-comment"></i> Has remarks
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="leave-action">
+                    {% if leave.status == 'Pending' %}
+                    <span class="pending-badge"><i class="fas fa-hourglass-half"></i> Pending</span>
+                    {% elif leave.status == 'Approved' %}
+                    <span class="approved-badge"><i class="fas fa-check-circle"></i> Approved</span>
+                    {% else %}
+                    <span class="rejected-badge"><i class="fas fa-times-circle"></i> Rejected</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            <a href="{{ url_for('employee.leave_applications') }}" class="view-all-link">View All Leave Applications →</a>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <p>No leave applications yet</p>
+                <a href="{{ url_for('employee.leave_applications') }}" class="btn-apply">Apply for Leave</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Profile Summary -->
+{% if profile %}
+<div class="profile-summary-section">
+    <h2><i class="fas fa-user-circle"></i> Profile Summary</h2>
+    <div class="profile-summary-card">
+        <div class="profile-avatar">
+            {% if profile.profile_picture %}
+                <img src="{{ url_for('static', filename=profile.profile_picture) }}" alt="Profile">
+            {% else %}
+                <i class="fas fa-user"></i>
+            {% endif %}
+        </div>
+        <div class="profile-summary-info">
+            <h3>{{ profile.first_name }} {{ profile.middle_name }} {{ profile.last_name }}</h3>
+            <p><strong>Rank:</strong> {{ profile.rank or 'N/A' }}</p>
+            <p><strong>Badge No:</strong> {{ profile.badge_number or 'N/A' }}</p>
+            <p><strong>Contact:</strong> {{ profile.contact_number or 'N/A' }}</p>
+            <p><strong>Email:</strong> {{ profile.email }}</p>
+        </div>
+        <div class="profile-action">
+            <a href="{{ url_for('employee.profile') }}" class="btn-edit-profile">
+                <i class="fas fa-edit"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+}
+
+.stat-blue .stat-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.stat-purple .stat-icon { background: linear-gradient(135deg, #a855f7, #7e22ce); }
+.stat-orange .stat-icon { background: linear-gradient(135deg, #f97316, #c2410c); }
+.stat-green .stat-icon { background: linear-gradient(135deg, #10b981, #047857); }
+
+.stat-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 36px;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-small {
+    font-size: 20px;
+    color: #999;
+}
+
+.stat-info p {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-detail {
+    font-size: 12px;
+    color: #999;
+}
+
+.deployment-section {
+    margin-bottom: 30px;
+}
+
+.deployment-section h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.deployment-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid #10b981;
+}
+
+.deployment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.deployment-badge {
+    background: #d1fae5;
+    color: #047857;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.deployment-date {
+    font-size: 13px;
+    color: #666;
+}
+
+.deployment-body h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.deployment-body p {
+    margin: 5px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.quick-actions-section {
+    margin-bottom: 30px;
+}
+
+.quick-actions-section h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    border: 2px solid transparent;
+}
+
+.action-card:hover {
+    border-color: var(--primary-red);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+.action-card i {
+    font-size: 36px;
+    color: var(--primary-red);
+    margin-bottom: 10px;
+}
+
+.action-card h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 15px;
+}
+
+.action-card p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.recent-section {
+    margin-bottom: 30px;
+}
+
+.recent-section h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.recent-list {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.recent-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
+}
+
+.recent-item:last-child {
+    border-bottom: none;
+}
+
+.leave-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.leave-icon.pending { background: #fff3e0; color: #f57c00; }
+.leave-icon.approved { background: #e8f5e9; color: #388e3c; }
+.leave-icon.rejected { background: #ffebee; color: #d32f2f; }
+
+.leave-details {
+    flex: 1;
+}
+
+.leave-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 15px;
+    color: #333;
+}
+
+.leave-details p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.leave-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.remarks-badge {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pending-badge, .approved-badge, .rejected-badge {
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pending-badge { color: #f57c00; }
+.approved-badge { color: #388e3c; }
+.rejected-badge { color: #d32f2f; }
+
+.view-all-link {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 15px;
+    color: var(--primary-red);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.view-all-link:hover {
+    background: var(--primary-red);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.empty-state p {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+}
+
+.btn-apply {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--primary-red);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-apply:hover {
+    background: var(--dark-red);
+    transform: translateY(-2px);
+}
+
+.profile-summary-section {
+    margin-bottom: 30px;
+}
+
+.profile-summary-section h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar i {
+    font-size: 48px;
+    color: #6366f1;
+}
+
+.profile-summary-info {
+    flex: 1;
+}
+
+.profile-summary-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.profile-summary-info p {
+    margin: 5px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.btn-edit-profile {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--primary-red);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-edit-profile:hover {
+    background: var(--dark-red);
+    transform: translateY(-2px);
+}
+</style>
 {% endblock %}
