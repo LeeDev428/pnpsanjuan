@@ -9,6 +9,40 @@
         <p>Submit and manage your leave requests</p>
     </div>
 
+    <!-- Leave Balance Card -->
+    <div class="leave-balance-card">
+        <div class="balance-item">
+            <div class="balance-icon total">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="balance-info">
+                <h3>{{ total_annual_leave }}</h3>
+                <p>Total Annual Leave</p>
+                <span class="balance-year">Year {{ current_year }}</span>
+            </div>
+        </div>
+        <div class="balance-item">
+            <div class="balance-icon used">
+                <i class="fas fa-calendar-minus"></i>
+            </div>
+            <div class="balance-info">
+                <h3>{{ used_leave }}</h3>
+                <p>Used Leave Days</p>
+                <span class="balance-detail">Approved only</span>
+            </div>
+        </div>
+        <div class="balance-item">
+            <div class="balance-icon remaining">
+                <i class="fas fa-calendar-plus"></i>
+            </div>
+            <div class="balance-info">
+                <h3 class="{% if remaining_leave < 5 %}text-warning{% endif %}">{{ remaining_leave }}</h3>
+                <p>Remaining Leave</p>
+                <span class="balance-detail">{% if remaining_leave < 5 %}Low balance!{% else %}Available{% endif %}</span>
+            </div>
+        </div>
+    </div>
+
     <div class="leave-toolbar">
         <div class="filter-group">
             <label><i class="fas fa-filter"></i> Status:</label>
@@ -29,6 +63,8 @@
             <table class="leave-table">
                 <thead>
                     <tr>
+                        <th>Employee Name</th>
+                        <th>Rank</th>
                         <th>Leave Type</th>
                         <th>Start Date</th>
                         <th>End Date</th>
@@ -41,6 +77,8 @@
                 <tbody id="leavesTable">
                     {% for leave in leaves %}
                     <tr>
+                        <td>{{ leave.employee_name or 'N/A' }}</td>
+                        <td>{{ leave.rank or 'N/A' }}</td>
                         <td>{{ leave.leave_type }}</td>
                         <td>{{ leave.start_date.strftime('%b %d, %Y') if leave.start_date else 'N/A' }}</td>
                         <td>{{ leave.end_date.strftime('%b %d, %Y') if leave.end_date else 'N/A' }}</td>
@@ -573,6 +611,80 @@ window.onclick = function(event) {
 .form-group input[type="number"]:hover,
 .form-group select:hover {
     border-color: #bbb;
+}
+
+/* Leave Balance Card Styles */
+.leave-balance-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.balance-item {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.balance-item:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.balance-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.balance-icon.total {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #1976d2;
+}
+
+.balance-icon.used {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    color: #f57c00;
+}
+
+.balance-icon.remaining {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    color: #388e3c;
+}
+
+.balance-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+}
+
+.balance-info p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+.balance-year,
+.balance-detail {
+    font-size: 12px;
+    color: #999;
+    display: block;
+}
+
+.text-warning {
+    color: #f57c00 !important;
 }
 </style>
 {% endblock %}
