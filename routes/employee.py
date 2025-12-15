@@ -52,10 +52,10 @@ def dashboard():
     
     # Get deployment status
     cursor.execute('''
-        SELECT d.*, DATE_FORMAT(d.deployment_date, '%b %d, %Y') as deployment_formatted
+        SELECT d.*, DATE_FORMAT(d.start_date, '%b %d, %Y') as deployment_formatted
         FROM deployments d
         WHERE d.employee_id = %s AND d.status = "Active"
-        ORDER BY d.deployment_date DESC
+        ORDER BY d.start_date DESC
         LIMIT 1
     ''', (session['user_id'],))
     current_deployment = cursor.fetchone()
