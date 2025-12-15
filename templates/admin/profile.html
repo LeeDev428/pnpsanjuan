@@ -31,18 +31,6 @@
             <p>{{ user.username }}</p>
         </div>
         <div class="form-group">
-            <label for="first_name">First Name:</label>
-            <input type="text" id="first_name" name="first_name" value="{{ profile.first_name if profile else '' }}" class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="middle_name">Middle Name:</label>
-            <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name if profile else '' }}" class="form-control">
-        </div>
-        <div class="form-group">
-            <label for="last_name">Last Name:</label>
-            <input type="text" id="last_name" name="last_name" value="{{ profile.last_name if profile else '' }}" class="form-control">
-        </div>
-        <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" value="{{ profile.email if profile else user.email }}" class="form-control">
         </div>
@@ -53,10 +41,6 @@
         <div class="form-group">
             <label>Role:</label>
             <p class="role-badge role-admin">Administrator</p>
-        </div>
-        <div class="form-group">
-            <label>Account Created:</label>
-            <p>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</p>
         </div>
     </div>
     
