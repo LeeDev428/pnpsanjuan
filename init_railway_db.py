@@ -11,7 +11,7 @@ def init_railway_db():
     try:
         print("Connecting to Railway MySQL...")
         conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)  # Use buffered cursor to avoid unread results
         
         print("Creating database tables...")
         
@@ -21,11 +21,14 @@ def init_railway_db():
             # Split by semicolon and execute each command
             for command in sql_commands.split(';'):
                 command = command.strip()
-                if command and not command.startswith('--'):
+                if command and not command.startswith('--') and not command.startswith('CREATE DATABASE'):
                     try:
                         cursor.execute(command)
+                        cursor.fetchall()  # Consume any results
                     except Exception as e:
                         print(f"Command failed (might be okay): {str(e)[:100]}")
+        
+        conn.commit()
         
         print("Running migration_add_status.sql...")
         try:
@@ -35,23 +38,31 @@ def init_railway_db():
                     if command and not command.startswith('--'):
                         try:
                             cursor.execute(command)
+                            try:
+                                cursor.fetchall()  # Consume any results
+                            except:
+                                pass
                         except Exception as e:
                             print(f"Migration command failed: {str(e)[:100]}")
+            conn.commit()
         except FileNotFoundError:
             print("migration_add_status.sql not found, skipping...")
         
         print("Running migration_2fa.sql...")
         try:
             with open('migration_2fa.sql', 'r', encoding='utf-8') as f:
-                for command in f.read().split(';'):
-                    command = command.strip()
-                    if command and not command.startswith('--'):
-                        try:
-                            cursor.execute(command)
-                        except Exception as e:
-                            print(f"2FA migration failed: {str(e)[:100]}")
+                sql_content = f.read()
+                # Execute the entire migration as one block
+                for result in cursor.execute(sql_content, multi=True):
+                    try:
+                        result.fetchall()
+                    except:
+                        pass
+            conn.commit()
         except FileNotFoundError:
             print("migration_2fa.sql not found, skipping...")
+        except Exception as e:
+            print(f"2FA migration note: {str(e)[:100]}")
         
         print("Running add_notifications.sql...")
         try:
@@ -61,12 +72,15 @@ def init_railway_db():
                     if command and not command.startswith('--'):
                         try:
                             cursor.execute(command)
+                            try:
+                                cursor.fetchall()
+                            except:
+                                pass
                         except Exception as e:
-                            print(f"Notifications migration failed: {str(e)[:100]}")
+                            print(f"Notifications migration note: {str(e)[:100]}")
+            conn.commit()
         except FileNotFoundError:
             print("add_notifications.sql not found, skipping...")
-        
-        conn.commit()
         
         # Verify tables were created
         cursor.execute("SHOW TABLES")
