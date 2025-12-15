@@ -38,6 +38,7 @@
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="suspended">Suspended</option>
+                <option value="terminated">Terminated</option>
             </select>
         </div>
         <button class="btn btn-primary" onclick="openAddUserModal()">
@@ -216,7 +217,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="role">Role *</label>
-                    <select id="role" name="role" required>
+                    <select id="role" name="role" required onchange="updateStatusOptions()">
                         <option value="employee">Employee</option>
                         <option value="applicant">Applicant</option>
                         <option value="admin">Admin</option>
@@ -226,6 +227,7 @@
                     <label for="status">Status *</label>
                     <select id="status" name="status" required>
                         <option value="active">Active</option>
+                        <option value="terminated">Terminated</option>
                         <option value="inactive">Inactive</option>
                         <option value="suspended">Suspended</option>
                     </select>
@@ -307,10 +309,41 @@ function filterUsers() {
         
         const statusBadge = row.querySelector('.badge');
         if (statusBadge) {
-            const status = statusBadge.textContent.toLowerCase();
+            const status = statusBadge.textContent.trim().toLowerCase();
             row.style.display = status === statusFilter ? '' : 'none';
         }
     });
+}
+
+// Update status options based on role
+function updateStatusOptions() {
+    const role = document.getElementById('role').value;
+    const statusSelect = document.getElementById('status');
+    const currentStatus = statusSelect.value;
+    
+    // Clear existing options
+    statusSelect.innerHTML = '';
+    
+    if (role === 'employee') {
+        // Only Active and Terminated for employees
+        statusSelect.innerHTML = `
+            <option value="active">Active</option>
+            <option value="terminated">Terminated</option>
+        `;
+    } else {
+        // All statuses for admin and applicant
+        statusSelect.innerHTML = `
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="suspended">Suspended</option>
+            <option value="terminated">Terminated</option>
+        `;
+    }
+    
+    // Try to maintain the current status if it's still available
+    if (currentStatus && Array.from(statusSelect.options).some(opt => opt.value === currentStatus)) {
+        statusSelect.value = currentStatus;
+    }
 }
 
 // Open add user modal
@@ -322,6 +355,7 @@ function openAddUserModal() {
     document.getElementById('password').required = true;
     document.getElementById('confirm_password').required = true;
     document.getElementById('passwordRow').style.display = 'flex';
+    updateStatusOptions(); // Update status options based on default role
     document.getElementById('userModal').style.display = 'flex';
 }
 
@@ -342,6 +376,7 @@ function openEditUserModal(userId, role) {
                 document.getElementById('username').value = data.user.username;
                 document.getElementById('email').value = data.user.email;
                 document.getElementById('role').value = data.user.role;
+                updateStatusOptions(); // Update options based on role
                 document.getElementById('status').value = data.user.status || 'active';
                 document.getElementById('userModal').style.display = 'flex';
             } else {
