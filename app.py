@@ -1,10 +1,10 @@
 from flask import Flask, render_template
-from config import DB_CONFIG
+from config import DB_CONFIG, SECRET_KEY
 import mysql.connector
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this-in-production'
+app.secret_key = SECRET_KEY
 
 # Configure file uploads
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
