@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - PNP San Juan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .otp-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .otp-input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+        
+        .otp-info {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .otp-info i {
+            color: #007bff;
+            margin-right: 8px;
+        }
+        
+        .resend-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .resend-link {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .resend-link:hover {
+            text-decoration: underline;
+        }
+        
+        .timer {
+            font-weight: bold;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Hidden flash messages for toast -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert-message" data-category="{{ category }}" style="display:none;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    {% include 'partials/navbar.html' %}
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="auth-header">
+                <h2>Two-Factor Authentication</h2>
+                <p>Enter the verification code sent to your email</p>
+            </div>
+
+            <div class="otp-info">
+                <i class="fas fa-envelope"></i>
+                <strong>Check your email!</strong><br>
+                We've sent a 6-digit verification code to your registered email address.
+            </div>
+
+            <form method="POST" class="auth-form" id="otp-form">
+                <div class="form-group">
+                    <label for="otp_code">Verification Code</label>
+                    <div class="otp-input-container">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <input type="hidden" id="otp_code" name="otp_code">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-check-circle"></i> Verify Code
+                </button>
+            </form>
+
+            <div class="resend-container">
+                <p>Didn't receive the code?</p>
+                <form method="POST" action="{{ url_for('auth.resend_otp') }}" style="display: inline;">
+                    <button type="submit" class="resend-link" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-redo"></i> Resend Code
+                    </button>
+                </form>
+            </div>
+
+            <div class="auth-footer">
+                <p><a href="{{ url_for('auth.login') }}"><i class="fas fa-arrow-left"></i> Back to Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script>
+        // OTP Input Auto-focus and Auto-submit
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const otpCodeField = document.getElementById('otp_code');
+        const otpForm = document.getElementById('otp-form');
+
+        otpInputs.forEach((input, index) => {
+            // Auto-focus next input on entry
+            input.addEventListener('input', function(e) {
+                if (this.value.length === 1) {
+                    if (index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                }
+                updateOTPCode();
+            });
+
+            // Handle backspace
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            // Paste handling
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').trim();
+                const digits = pastedData.match(/\d/g);
+                
+                if (digits) {
+                    digits.forEach((digit, i) => {
+                        if (i < otpInputs.length) {
+                            otpInputs[i].value = digit;
+                        }
+                    });
+                    updateOTPCode();
+                    // Focus last filled input or last input
+                    const lastIndex = Math.min(digits.length, otpInputs.length) - 1;
+                    otpInputs[lastIndex].focus();
+                }
+            });
+
+            // Only allow numbers
+            input.addEventListener('beforeinput', function(e) {
+                if (e.data && !/^\d$/.test(e.data)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Update hidden field with complete OTP
+        function updateOTPCode() {
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            otpCodeField.value = otp;
+            
+            // Auto-submit when all 6 digits are entered
+            if (otp.length === 6) {
+                setTimeout(() => {
+                    otpForm.submit();
+                }, 300);
+            }
+        }
+
+        // Focus first input on page load
+        window.addEventListener('load', () => {
+            otpInputs[0].focus();
+        });
+    </script>
+    {% include 'partials/footer.html' %}
+</body>
+</html>
