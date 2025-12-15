@@ -1293,3 +1293,136 @@ def export_custom():
                    mimetype='text/csv',
                    headers={'Content-Disposition': f'attachment; filename={filename}'})
 
+
+@admin_bp.route('/contact-support')
+@login_required
+@role_required('admin')
+def contact_support():
+    """View all support requests from applicants"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile for nav
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Get all support requests from notifications
+    cursor.execute('''
+        SELECT n.id, n.title, n.message, n.is_read, n.created_at, n.related_id,
+               u.username as applicant_name, 
+               COALESCE(ap.email, u.email) as applicant_email
+        FROM notifications n
+        JOIN users u ON n.user_id = %s
+        LEFT JOIN users applicant_users ON n.related_id = applicant_users.id
+        LEFT JOIN applicant_profiles ap ON applicant_users.id = ap.user_id
+        WHERE n.type = 'general' AND n.title LIKE 'Support Request:%%'
+        ORDER BY n.created_at DESC
+    ''', (session['user_id'],))
+    
+    # Get requests from the proper source
+    cursor.execute('''
+        SELECT n.*, u.username as applicant_name,
+               COALESCE(ap.email, u.email) as applicant_email
+        FROM notifications n
+        LEFT JOIN users u ON n.related_id = u.id
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+        WHERE n.user_id = %s AND n.type = 'general' AND n.title LIKE 'Support Request:%%'
+        ORDER BY n.is_read ASC, n.created_at DESC
+    ''', (session['user_id'],))
+    support_requests = cursor.fetchall()
+    
+    # Count totals
+    total_requests = len(support_requests)
+    unread_requests = sum(1 for req in support_requests if not req['is_read'])
+    
+    # Get unread notifications
+    cursor.execute('SELECT COUNT(*) as total FROM notifications WHERE user_id = %s AND is_read = FALSE', (session['user_id'],))
+    unread_notifs = cursor.fetchone()['total']
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/contact_support.html',
+                         support_requests=support_requests,
+                         total_requests=total_requests,
+                         unread_requests=unread_requests,
+                         profile=profile,
+                         unread_notifs=unread_notifs)
+
+
+@admin_bp.route('/contact-support/<int:request_id>')
+@login_required
+@role_required('admin')
+def get_support_request(request_id):
+    """Get details of a specific support request"""
+    from flask import jsonify
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT n.*, u.username as applicant_name,
+                   COALESCE(ap.email, u.email) as applicant_email
+            FROM notifications n
+            LEFT JOIN users u ON n.related_id = u.id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            WHERE n.id = %s AND n.user_id = %s
+        ''', (request_id, session['user_id']))
+        
+        request_data = cursor.fetchone()
+        
+        if request_data:
+            return jsonify({
+                'success': True,
+                'request': request_data
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Request not found'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@admin_bp.route('/contact-support/<int:request_id>/mark-read', methods=['POST'])
+@login_required
+@role_required('admin')
+def mark_support_read(request_id):
+    """Mark a support request as read"""
+    from flask import jsonify
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            UPDATE notifications 
+            SET is_read = TRUE 
+            WHERE id = %s AND user_id = %s
+        ''', (request_id, session['user_id']))
+        
+        conn.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Marked as read'
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+    finally:
+        cursor.close()
+        conn.close()
+
+
