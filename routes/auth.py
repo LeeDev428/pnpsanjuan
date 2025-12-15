@@ -152,6 +152,39 @@ def register():
     
     return render_template('register.html')
 
+@auth_bp.route('/verify-registration-otp', methods=['GET', 'POST'])
+def verify_registration_otp():
+    # Check if there's a pending registration verification
+    if 'pending_registration_user_id' not in session:
+        flash('Invalid access. Please register first.', 'error')
+        return redirect(url_for('auth.register'))
+    
+    if request.method == 'POST':
+        otp_code = request.form.get('otp_code', '').strip()
+        user_id = session['pending_registration_user_id']
+        
+        # Verify OTP
+        if verify_otp(user_id, otp_code):
+            # OTP is valid, activate the account
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET status = %s WHERE id = %s', ('active', user_id))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            # Clear session
+            session.pop('pending_registration_user_id', None)
+            session.pop('pending_registration_username', None)
+            session.pop('pending_registration_email', None)
+            
+            flash('Registration verified successfully! You can now log in.', 'success')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('Invalid or expired verification code. Please try again.', 'error')
+    
+    return render_template('verify_otp.html', is_registration=True)
+
 @auth_bp.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
     # Check if there's a pending 2FA verification
