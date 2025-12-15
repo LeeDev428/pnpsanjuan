@@ -119,8 +119,8 @@ PNP San Juan Team
         msg.attach(part1)
         msg.attach(part2)
         
-        # Connect to Gmail SMTP server
-        server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'])
+        # Connect to Gmail SMTP server with timeout
+        server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
         server.starttls()  # Enable TLS encryption
         server.login(SMTP_CONFIG['username'], SMTP_CONFIG['password'])
         
