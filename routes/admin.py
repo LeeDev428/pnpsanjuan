@@ -10,6 +10,32 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
+def create_notification(title, message, notif_type, related_id=None):
+    """Create a notification for all admin users"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get all admin users
+        cursor.execute('SELECT id FROM users WHERE role = "admin"')
+        admins = cursor.fetchall()
+        
+        # Create notification for each admin
+        for admin in admins:
+            cursor.execute('''
+                INSERT INTO notifications (user_id, title, message, type, related_id)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (admin[0], title, message, notif_type, related_id))
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error creating notification: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @admin_bp.route('/dashboard')
 @login_required
 @role_required('admin')
@@ -575,6 +601,84 @@ def update_leave_status():
         cursor.close()
         conn.close()
         return {'success': False, 'message': f'Error updating leave status: {str(e)}'}
+
+@admin_bp.route('/notifications/get')
+@login_required
+@role_required('admin')
+def get_notifications():
+    """Get recent notifications for admin"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT id, title, message, type, related_id, is_read, created_at
+            FROM notifications
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 50
+        ''', (session['user_id'],))
+        
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'notifications': notifications}
+    
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e), 'notifications': []}
+
+@admin_bp.route('/notifications/<int:notif_id>/read', methods=['POST'])
+@login_required
+@role_required('admin')
+def mark_notification_read(notif_id):
+    """Mark a single notification as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE id = %s AND user_id = %s',
+            (notif_id, session['user_id'])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
+
+@admin_bp.route('/notifications/read-all', methods=['POST'])
+@login_required
+@role_required('admin')
+def mark_all_notifications_read():
+    """Mark all notifications as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE user_id = %s AND is_read = FALSE',
+            (session['user_id'],)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
 
 @admin_bp.route('/deployment')
 @login_required
