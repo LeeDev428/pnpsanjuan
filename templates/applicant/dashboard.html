@@ -12,29 +12,69 @@
     <div class="dashboard-card">
         <div class="card-icon"><i class="fas fa-user-circle"></i></div>
         <h3>My Profile</h3>
-        <p>Update your application details</p>
-        <a href="{{ url_for('applicant.profile') }}" class="btn btn-primary">Edit Profile</a>
+        <p>View your application details</p>
+        <a href="{{ url_for('applicant.profile') }}" class="btn btn-primary">View Profile</a>
     </div>
 
-    <div class="dashboard-card">
+    <div class="dashboard-card highlight">
         <div class="card-icon"><i class="fas fa-clipboard-check"></i></div>
         <h3>Application Status</h3>
         <p>Track your application progress</p>
-        <a href="#" class="btn btn-primary">View Status</a>
+        <a href="{{ url_for('applicant.application_status') }}" class="btn btn-primary">View Status</a>
     </div>
 
     <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-folder-open"></i></div>
-        <h3>Documents</h3>
-        <p>Upload required documents</p>
-        <a href="#" class="btn btn-primary">Manage Documents</a>
-    </div>
-
-    <div class="dashboard-card">
-        <div class="card-icon"><i class="fas fa-list-ul"></i></div>
-        <h3>Requirements</h3>
-        <p>View application requirements</p>
-        <a href="#" class="btn btn-primary">View Requirements</a>
+        <div class="card-icon"><i class="fas fa-info-circle"></i></div>
+        <h3>Need Help?</h3>
+        <p>Contact admin for assistance</p>
+        <a href="#" class="btn btn-primary">Contact Admin</a>
     </div>
 </div>
+
+<div class="info-section">
+    <div class="info-card">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>Important Notice</h3>
+        <p>Your profile information is read-only. If you need to update any details, please contact the administrator.</p>
+    </div>
+</div>
+
+<style>
+.dashboard-card.highlight {
+    border: 2px solid var(--primary-red);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+.info-section {
+    margin-top: 30px;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #fff3cd, #ffe69c);
+    border: 1px solid #ffc107;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.info-card i {
+    font-size: 32px;
+    color: #856404;
+    margin-top: 5px;
+}
+
+.info-card h3 {
+    margin: 0 0 8px 0;
+    color: #856404;
+    font-size: 18px;
+}
+
+.info-card p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
+}
+</style>
 {% endblock %}
