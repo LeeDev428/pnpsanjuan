@@ -87,6 +87,17 @@ def register():
             cursor.execute('INSERT INTO applicant_profiles (user_id, email) VALUES (%s, %s)',
                          (user_id, email))
             
+            # Create notification for admins
+            cursor.execute('SELECT id FROM users WHERE role = "admin"')
+            admins = cursor.fetchall()
+            
+            for admin in admins:
+                cursor.execute('''
+                    INSERT INTO notifications (user_id, title, message, type, related_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                ''', (admin[0], 'New Applicant Registration', 
+                      f'New applicant "{username}" has registered.', 'applicant', user_id))
+            
             conn.commit()
             cursor.close()
             conn.close()
