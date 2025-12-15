@@ -12,13 +12,70 @@ def allowed_file(filename):
 @login_required
 @role_required('employee')
 def dashboard():
+    from datetime import datetime
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT profile_picture FROM employee_profiles WHERE user_id = %s', (session['user_id'],))
+    
+    # Get profile with full details
+    cursor.execute('''
+        SELECT ep.*, u.username, u.email
+        FROM employee_profiles ep
+        JOIN users u ON ep.user_id = u.id
+        WHERE ep.user_id = %s
+    ''', (session['user_id'],))
     profile = cursor.fetchone()
+    
+    # Get leave statistics for current year
+    current_year = datetime.now().year
+    cursor.execute('''
+        SELECT COALESCE(SUM(days_count), 0) as used_days
+        FROM leave_applications
+        WHERE employee_id = %s AND status = "Approved" AND YEAR(start_date) = %s
+    ''', (session['user_id'], current_year))
+    used_leave = cursor.fetchone()['used_days'] or 0
+    remaining_leave = 15 - used_leave
+    
+    # Get pending leaves count
+    cursor.execute('SELECT COUNT(*) as total FROM leave_applications WHERE employee_id = %s AND status = "Pending"', (session['user_id'],))
+    pending_leaves = cursor.fetchone()['total']
+    
+    # Get recent leave applications
+    cursor.execute('''
+        SELECT *, DATE_FORMAT(start_date, '%b %d, %Y') as start_formatted,
+               DATE_FORMAT(end_date, '%b %d, %Y') as end_formatted
+        FROM leave_applications
+        WHERE employee_id = %s
+        ORDER BY applied_date DESC
+        LIMIT 3
+    ''', (session['user_id'],))
+    recent_leaves = cursor.fetchall()
+    
+    # Get deployment status
+    cursor.execute('''
+        SELECT d.*, DATE_FORMAT(d.deployment_date, '%b %d, %Y') as deployment_formatted
+        FROM deployments d
+        WHERE d.employee_id = %s AND d.status = "Active"
+        ORDER BY d.deployment_date DESC
+        LIMIT 1
+    ''', (session['user_id'],))
+    current_deployment = cursor.fetchone()
+    
+    # Get unread notifications
+    cursor.execute('SELECT COUNT(*) as total FROM notifications WHERE user_id = %s AND is_read = FALSE', (session['user_id'],))
+    unread_notifs = cursor.fetchone()['total']
+    
     cursor.close()
     conn.close()
-    return render_template('employee/dashboard.html', profile=profile)
+    
+    return render_template('employee/dashboard.html',
+                         profile=profile,
+                         used_leave=used_leave,
+                         remaining_leave=remaining_leave,
+                         pending_leaves=pending_leaves,
+                         recent_leaves=recent_leaves,
+                         current_deployment=current_deployment,
+                         unread_notifs=unread_notifs,
+                         current_year=current_year)
 
 @employee_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
