@@ -30,6 +30,7 @@
             <table class="recruitment-table">
                 <thead>
                     <tr>
+                        <th>Applicant ID</th>
                         <th>Applicant Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -41,6 +42,7 @@
                 <tbody id="applicantsTable">
                     {% for applicant in applicants %}
                     <tr>
+                        <td>#{{ applicant.user_id }}</td>
                         <td>{{ applicant.first_name or 'N/A' }} {{ applicant.middle_name or '' }} {{ applicant.last_name or '' }}</td>
                         <td>{{ applicant.email or applicant.user_email }}</td>
                         <td>{{ applicant.phone or 'N/A' }}</td>
@@ -54,14 +56,17 @@
                             <button class="btn-action btn-view" onclick="viewApplicant({{ applicant.user_id }})" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn-action btn-edit" onclick="updateStatus({{ applicant.user_id }}, '{{ applicant.application_status }}')" title="Update Status">
+                            <button class="btn-action btn-edit" onclick="editApplicant({{ applicant.user_id }})" title="Edit Applicant">
                                 <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-status" onclick="updateStatus({{ applicant.user_id }}, '{{ applicant.application_status }}')" title="Update Status">
+                                <i class="fas fa-clipboard-check"></i>
                             </button>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="no-data">No applicants found</td>
+                        <td colspan="7" class="no-data">No applicants found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -130,6 +135,51 @@
     </div>
 </div>
 
+<!-- Edit Applicant Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-edit"></i> Edit Applicant Information</h2>
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="edit_applicant_id" name="applicant_id">
+            <div class="form-group">
+                <label for="edit_first_name">First Name</label>
+                <input type="text" id="edit_first_name" name="first_name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_middle_name">Middle Name</label>
+                <input type="text" id="edit_middle_name" name="middle_name">
+            </div>
+            <div class="form-group">
+                <label for="edit_last_name">Last Name</label>
+                <input type="text" id="edit_last_name" name="last_name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_email">Email</label>
+                <input type="email" id="edit_email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_phone">Phone</label>
+                <input type="text" id="edit_phone" name="phone">
+            </div>
+            <div class="form-group">
+                <label for="edit_address">Address</label>
+                <textarea id="edit_address" name="address" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit_date_of_birth">Date of Birth</label>
+                <input type="date" id="edit_date_of_birth" name="date_of_birth">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function searchApplicants() {
     const input = document.getElementById('searchInput');
@@ -174,6 +224,10 @@ function viewApplicant(userId) {
                 const applicant = data.applicant;
                 document.getElementById('viewContent').innerHTML = `
                     <div class="user-detail-grid">
+                        <div class="detail-row">
+                            <label>Applicant ID</label>
+                            <span>#${applicant.id}</span>
+                        </div>
                         <div class="detail-row">
                             <label>Full Name</label>
                             <span>${applicant.first_name || 'N/A'} ${applicant.middle_name || ''} ${applicant.last_name || ''}</span>
@@ -233,6 +287,59 @@ function closeStatusModal() {
     document.getElementById('statusForm').reset();
 }
 
+function editApplicant(userId) {
+    fetch(`/admin/recruitment/${userId}/view`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const applicant = data.applicant;
+                document.getElementById('edit_applicant_id').value = applicant.id;
+                document.getElementById('edit_first_name').value = applicant.first_name || '';
+                document.getElementById('edit_middle_name').value = applicant.middle_name || '';
+                document.getElementById('edit_last_name').value = applicant.last_name || '';
+                document.getElementById('edit_email').value = applicant.email || '';
+                document.getElementById('edit_phone').value = applicant.phone || '';
+                document.getElementById('edit_address').value = applicant.address || '';
+                document.getElementById('edit_date_of_birth').value = applicant.date_of_birth || '';
+                document.getElementById('editModal').style.display = 'flex';
+            } else {
+                showToast(data.message || 'Failed to load applicant details', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error loading applicant details', 'error');
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editForm').reset();
+}
+
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/recruitment/edit', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Failed to update applicant', 'error');
+        }
+    })
+    .catch(error => {
+        showToast('Error updating applicant', 'error');
+    });
+});
+
 document.getElementById('statusForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -261,11 +368,15 @@ document.getElementById('statusForm').addEventListener('submit', function(e) {
 window.onclick = function(event) {
     const viewModal = document.getElementById('viewModal');
     const statusModal = document.getElementById('statusModal');
+    const editModal = document.getElementById('editModal');
     if (event.target === viewModal) {
         closeViewModal();
     }
     if (event.target === statusModal) {
         closeStatusModal();
+    }
+    if (event.target === editModal) {
+        closeEditModal();
     }
 }
 </script>
