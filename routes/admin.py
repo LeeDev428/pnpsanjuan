@@ -42,11 +42,70 @@ def create_notification(title, message, notif_type, related_id=None):
 def dashboard():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    
+    # Get profile
     cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
     profile = cursor.fetchone()
+    
+    # Get total users by role
+    cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "admin"')
+    total_admins = cursor.fetchone()['total']
+    
+    cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "employee"')
+    total_employees = cursor.fetchone()['total']
+    
+    cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "applicant"')
+    total_applicants = cursor.fetchone()['total']
+    
+    # Get pending leave applications
+    cursor.execute('SELECT COUNT(*) as total FROM leave_applications WHERE status = "Pending"')
+    pending_leaves = cursor.fetchone()['total']
+    
+    # Get recent leave applications (last 5)
+    cursor.execute('''
+        SELECT la.*, u.username, ep.rank,
+               DATE_FORMAT(la.start_date, '%b %d, %Y') as start_formatted,
+               DATE_FORMAT(la.end_date, '%b %d, %Y') as end_formatted
+        FROM leave_applications la
+        JOIN users u ON la.employee_id = u.id
+        LEFT JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        ORDER BY la.applied_date DESC
+        LIMIT 5
+    ''')
+    recent_leaves = cursor.fetchall()
+    
+    # Get active deployments
+    cursor.execute('SELECT COUNT(*) as total FROM deployments WHERE status = "Active"')
+    active_deployments = cursor.fetchone()['total']
+    
+    # Get recent applicants (last 5)
+    cursor.execute('''
+        SELECT u.id, u.username, u.email, u.created_at,
+               DATE_FORMAT(u.created_at, '%b %d, %Y') as registered_date
+        FROM users u
+        WHERE u.role = "applicant"
+        ORDER BY u.created_at DESC
+        LIMIT 5
+    ''')
+    recent_applicants = cursor.fetchall()
+    
+    # Get unread notifications count
+    cursor.execute('SELECT COUNT(*) as total FROM notifications WHERE user_id = %s AND is_read = FALSE', (session['user_id'],))
+    unread_notifs = cursor.fetchone()['total']
+    
     cursor.close()
     conn.close()
-    return render_template('admin/dashboard.html', profile=profile)
+    
+    return render_template('admin/dashboard.html',
+                         profile=profile,
+                         total_admins=total_admins,
+                         total_employees=total_employees,
+                         total_applicants=total_applicants,
+                         pending_leaves=pending_leaves,
+                         recent_leaves=recent_leaves,
+                         active_deployments=active_deployments,
+                         recent_applicants=recent_applicants,
+                         unread_notifs=unread_notifs)
 
 @admin_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -308,11 +367,16 @@ def edit_user():
             conn.close()
             return {'success': False, 'message': 'Username or email already exists'}
         
-        # Update user
+        # Update user in users table
         cursor.execute(
             'UPDATE users SET username = %s, email = %s, role = %s, status = %s WHERE id = %s',
             (username, email, role, status, user_id)
         )
+        
+        # Also update email in profile tables if changed
+        cursor.execute('UPDATE employee_profiles SET email = %s WHERE user_id = %s', (email, user_id))
+        cursor.execute('UPDATE applicant_profiles SET email = %s WHERE user_id = %s', (email, user_id))
+        cursor.execute('UPDATE admin_profiles SET email = %s WHERE user_id = %s', (email, user_id))
         
         conn.commit()
         cursor.close()
@@ -410,16 +474,30 @@ def view_applicant(user_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
+    # Get applicant details with created_at and calculate applicant ID
     cursor.execute('''
-        SELECT u.id, u.email as user_email, u.status as account_status,
+        SELECT u.id, u.email as user_email, u.status as account_status, u.created_at,
                ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
                ap.address, ap.date_of_birth, ap.application_status,
-               DATE_FORMAT(ap.applied_date, '%%M %%d, %%Y') as applied_date
+               DATE_FORMAT(u.created_at, '%%b %%d, %%Y') as applied_date
         FROM users u
         LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
         WHERE u.id = %s AND u.role = 'applicant'
     ''', (user_id,))
     applicant = cursor.fetchone()
+    
+    # Generate applicant ID in format YY-XXX (e.g., 25-001)
+    if applicant and applicant['created_at']:
+        year = applicant['created_at'].strftime('%y')
+        # Count applicants registered in the same year up to this user
+        cursor.execute('''
+            SELECT COUNT(*) as count FROM users
+            WHERE role = 'applicant' AND YEAR(created_at) = YEAR(%s) AND id <= %s
+        ''', (applicant['created_at'], user_id))
+        sequence = cursor.fetchone()['count']
+        applicant['applicant_id'] = f"{year}-{sequence:03d}"
+    else:
+        applicant['applicant_id'] = 'N/A'
     
     cursor.close()
     conn.close()
