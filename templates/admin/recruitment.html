@@ -226,7 +226,7 @@ function viewApplicant(userId) {
                     <div class="user-detail-grid">
                         <div class="detail-row">
                             <label>Applicant ID</label>
-                            <span>#${applicant.id}</span>
+                            <span><strong>${applicant.applicant_id || 'N/A'}</strong></span>
                         </div>
                         <div class="detail-row">
                             <label>Full Name</label>
@@ -250,7 +250,7 @@ function viewApplicant(userId) {
                         </div>
                         <div class="detail-row">
                             <label>Application Status</label>
-                            <span class="status-badge status-${applicant.application_status.toLowerCase()}">${applicant.application_status}</span>
+                            <span class="status-badge status-${applicant.application_status ? applicant.application_status.toLowerCase() : 'pending'}">${applicant.application_status || 'Pending'}</span>
                         </div>
                         <div class="detail-row">
                             <label>Applied Date</label>
