@@ -1,0 +1,309 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Leave Applications - PNP San Juan{% endblock %}
+
+{% block content %}
+<div class="leave-container">
+    <div class="leave-header">
+        <h1><i class="fas fa-calendar-alt"></i> Employee Leave Applications</h1>
+        <p>View and manage employee leave requests</p>
+    </div>
+
+    <div class="leave-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by employee name..." onkeyup="searchLeaves()">
+        </div>
+        <div class="filter-group">
+            <label><i class="fas fa-filter"></i> Status:</label>
+            <select id="statusFilter" onchange="filterLeaves()">
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="leave-content">
+        <div class="table-container">
+            <table class="leave-table">
+                <thead>
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Rank</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Applied Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leavesTable">
+                    {% for leave in leaves %}
+                    <tr>
+                        <td>{{ leave.employee_name or 'N/A' }}</td>
+                        <td>{{ leave.rank or 'N/A' }}</td>
+                        <td>{{ leave.leave_type }}</td>
+                        <td>{{ leave.start_date.strftime('%b %d, %Y') if leave.start_date else 'N/A' }}</td>
+                        <td>{{ leave.end_date.strftime('%b %d, %Y') if leave.end_date else 'N/A' }}</td>
+                        <td>{{ leave.days_count }} day(s)</td>
+                        <td>
+                            <span class="status-badge status-{{ leave.status|lower }}">
+                                {{ leave.status }}
+                            </span>
+                        </td>
+                        <td>{{ leave.applied_date.strftime('%b %d, %Y') if leave.applied_date else 'N/A' }}</td>
+                        <td class="action-buttons">
+                            <button class="btn-action btn-view" onclick="viewLeave({{ leave.id }})" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if leave.status == 'Pending' %}
+                            <button class="btn-action btn-approve" onclick="updateStatus({{ leave.id }}, 'Approved')" title="Approve">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn-action btn-reject" onclick="updateStatus({{ leave.id }}, 'Rejected')" title="Reject">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="no-data">No leave applications found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('admin.leave_applications', page=page-1) }}" class="page-btn">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <a href="{{ url_for('admin.leave_applications', page=p) }}" class="page-btn">{{ p }}</a>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <span class="page-btn disabled">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <a href="{{ url_for('admin.leave_applications', page=page+1) }}" class="page-btn">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Leave Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> Leave Application Details</h2>
+            <span class="modal-close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="view-content" id="viewContent"></div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-clipboard-check"></i> Update Leave Status</h2>
+            <span class="modal-close" onclick="closeStatusModal()">&times;</span>
+        </div>
+        <form id="statusForm">
+            <input type="hidden" id="leave_id" name="leave_id">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="remarks">Remarks (Optional)</label>
+                <textarea id="remarks" name="remarks" rows="3" placeholder="Add any comments or notes..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeStatusModal()">Cancel</button>
+                <button type="submit" class="btn-submit">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function searchLeaves() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('leavesTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const text = rows[i].textContent.toLowerCase();
+        rows[i].style.display = text.indexOf(filter) > -1 ? '' : 'none';
+    }
+}
+
+function filterLeaves() {
+    const filter = document.getElementById('statusFilter').value;
+    const table = document.getElementById('leavesTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const statusBadge = rows[i].querySelector('.status-badge');
+        if (!statusBadge) continue;
+        
+        const status = statusBadge.textContent.trim();
+        rows[i].style.display = (filter === 'all' || status === filter) ? '' : 'none';
+    }
+}
+
+function viewLeave(id) {
+    fetch(`/admin/leave/${id}/get`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const l = data.leave;
+                document.getElementById('viewContent').innerHTML = `
+                    <div class="detail-grid">
+                        <div class="detail-row">
+                            <label>Employee Name</label>
+                            <span>${l.employee_name || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Rank</label>
+                            <span>${l.rank || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Leave Type</label>
+                            <span>${l.leave_type}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Status</label>
+                            <span class="status-badge status-${l.status.toLowerCase()}">${l.status}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Start Date</label>
+                            <span>${l.start_date_formatted}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>End Date</label>
+                            <span>${l.end_date_formatted}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Number of Days</label>
+                            <span>${l.days_count} day(s)</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Applied Date</label>
+                            <span>${l.applied_date_formatted}</span>
+                        </div>
+                        <div class="detail-row full-width">
+                            <label>Reason</label>
+                            <span>${l.reason}</span>
+                        </div>
+                        ${l.remarks ? `
+                        <div class="detail-row full-width">
+                            <label>Admin Remarks</label>
+                            <span>${l.remarks}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                document.getElementById('viewModal').style.display = 'flex';
+            }
+        });
+}
+
+function updateStatus(id, status) {
+    document.getElementById('leave_id').value = id;
+    document.getElementById('status').value = status;
+    document.getElementById('statusModal').style.display = 'flex';
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+function closeStatusModal() {
+    document.getElementById('statusModal').style.display = 'none';
+    document.getElementById('statusForm').reset();
+}
+
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/leave/update-status', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeStatusModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Failed to update status', 'error');
+        }
+    })
+    .catch(error => {
+        showToast('Error updating status', 'error');
+    });
+});
+
+window.onclick = function(event) {
+    const viewModal = document.getElementById('viewModal');
+    const statusModal = document.getElementById('statusModal');
+    if (event.target === viewModal) closeViewModal();
+    if (event.target === statusModal) closeStatusModal();
+}
+</script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deployment.css') }}">
+<style>
+.leave-container { padding: 20px; }
+.leave-header { margin-bottom: 30px; }
+.leave-header h1 { font-size: 28px; color: var(--primary-red); margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+.leave-header p { color: #666; font-size: 14px; }
+.leave-toolbar { display: flex; gap: 20px; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; }
+.leave-content { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+.leave-table { width: 100%; border-collapse: collapse; }
+.leave-table thead { background: linear-gradient(135deg, var(--primary-red), var(--dark-red)); color: white; }
+.leave-table th { padding: 16px; text-align: left; font-weight: 600; font-size: 14px; }
+.leave-table tbody tr { border-bottom: 1px solid #e5e5e5; transition: background-color 0.2s; }
+.leave-table tbody tr:hover { background-color: #f8f9fa; }
+.leave-table td { padding: 14px 16px; font-size: 14px; color: #333; }
+.no-data { text-align: center; padding: 40px !important; color: #999; font-style: italic; }
+.action-buttons { display: flex; gap: 8px; }
+.btn-action { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+.btn-view { background: #3498db; color: white; }
+.btn-view:hover { background: #2980b9; }
+.btn-approve { background: #27ae60; color: white; }
+.btn-approve:hover { background: #229954; }
+.btn-reject { background: #e74c3c; color: white; }
+.btn-reject:hover { background: #c0392b; }
+.status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+.status-pending { background: #fff3cd; color: #856404; }
+.status-approved { background: #d4edda; color: #155724; }
+.status-rejected { background: #f8d7da; color: #721c24; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 20px; }
+.page-btn { padding: 8px 14px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; text-decoration: none; color: #333; transition: all 0.2s; }
+.page-btn:hover:not(.active):not(.disabled) { background: #f0f0f0; border-color: var(--primary-red); }
+.page-btn.active { background: var(--primary-red); color: white; border-color: var(--primary-red); }
+.page-btn.disabled { cursor: not-allowed; opacity: 0.5; }
+</style>
+{% endblock %}
