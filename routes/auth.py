@@ -108,8 +108,8 @@ def register():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)',
-                         (username, email, hashed_password, 'applicant'))
+            cursor.execute('INSERT INTO users (username, email, password, role, status) VALUES (%s, %s, %s, %s, %s)',
+                         (username, email, hashed_password, 'applicant', 'inactive'))
             user_id = cursor.lastrowid
             
             # Create applicant profile
@@ -130,8 +130,23 @@ def register():
             conn.commit()
             cursor.close()
             conn.close()
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('auth.login'))
+            
+            # Generate and send OTP for registration verification
+            otp_code = generate_otp()
+            
+            if store_otp(user_id, otp_code):
+                if send_otp_email(email, otp_code, username):
+                    # Store registration info in session
+                    session['pending_registration_user_id'] = user_id
+                    session['pending_registration_username'] = username
+                    session['pending_registration_email'] = email
+                    flash('A verification code has been sent to your email. Please verify to complete registration.', 'success')
+                    return redirect(url_for('auth.verify_registration_otp'))
+                else:
+                    flash('Failed to send verification code. Please contact support.', 'error')
+            else:
+                flash('An error occurred. Please try again.', 'error')
+                
         except mysql.connector.IntegrityError:
             flash('Username or email already exists', 'error')
     
