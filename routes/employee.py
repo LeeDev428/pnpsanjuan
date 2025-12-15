@@ -223,6 +223,25 @@ def add_leave():
             INSERT INTO leave_applications (employee_id, leave_type, start_date, end_date, days_count, reason)
             VALUES (%s, %s, %s, %s, %s, %s)
         ''', (session['user_id'], leave_type, start_date, end_date, days_count, reason))
+        leave_id = cursor.lastrowid
+        
+        # Get employee name for notification
+        cursor.execute('SELECT username FROM users WHERE id = %s', (session['user_id'],))
+        employee = cursor.fetchone()
+        employee_name = employee['username'] if employee else 'An employee'
+        
+        # Create notification for all admins
+        cursor.execute('SELECT id FROM users WHERE role = "admin"')
+        admins = cursor.fetchall()
+        
+        for admin in admins:
+            cursor.execute('''
+                INSERT INTO notifications (user_id, title, message, type, related_id)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (admin['id'], 'New Leave Application', 
+                  f'{employee_name} applied for {leave_type} from {start_date} to {end_date}.', 
+                  'leave', leave_id))
+        
         conn.commit()
         cursor.close()
         conn.close()
