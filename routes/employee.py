@@ -293,9 +293,9 @@ def get_leave(leave_id):
     
     cursor.execute('''
         SELECT *,
-               DATE_FORMAT(start_date, '%%b %%d, %%Y') as start_date_formatted,
-               DATE_FORMAT(end_date, '%%b %%d, %%Y') as end_date_formatted,
-               DATE_FORMAT(applied_date, '%%b %%d, %%Y') as applied_date_formatted
+               DATE_FORMAT(start_date, '%b %d, %Y') as start_date_formatted,
+               DATE_FORMAT(end_date, '%b %d, %Y') as end_date_formatted,
+               DATE_FORMAT(applied_date, '%b %d, %Y') as applied_date_formatted
         FROM leave_applications
         WHERE id = %s AND employee_id = %s
     ''', (leave_id, session['user_id']))
