@@ -441,15 +441,35 @@ def recruitment():
     # Get all applicants with pagination
     cursor.execute('''
         SELECT u.id as user_id, u.email as user_email, u.status as account_status,
-               ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
+               u.created_at, ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
                ap.application_status, ap.applied_date
         FROM users u
         LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
         WHERE u.role = 'applicant'
-        ORDER BY ap.applied_date DESC
+        ORDER BY u.created_at DESC
         LIMIT %s OFFSET %s
     ''', (per_page, offset))
     applicants = cursor.fetchall()
+    
+    # Generate applicant IDs for each applicant
+    for applicant in applicants:
+        if applicant['created_at']:
+            # Get year from created_at
+            year = applicant['created_at'].strftime('%y')
+            
+            # Count applicants created in the same year before this one
+            cursor.execute('''
+                SELECT COUNT(*) as count 
+                FROM users 
+                WHERE role = 'applicant' 
+                AND YEAR(created_at) = %s
+                AND created_at <= %s
+            ''', (applicant['created_at'].year, applicant['created_at']))
+            
+            sequence = cursor.fetchone()['count']
+            applicant['applicant_id'] = f"{year}-{sequence:03d}"
+        else:
+            applicant['applicant_id'] = 'N/A'
     
     # Get total count
     cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "applicant"')
