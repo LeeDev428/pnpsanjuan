@@ -1,5 +1,6 @@
 """
-Email utility module for sending OTP codes via Gmail SMTP
+Email utility module for sending OTP codes via SMTP
+Supports both Gmail SMTP and SendGrid API
 """
 import smtplib
 import random
@@ -10,6 +11,7 @@ from datetime import datetime, timedelta
 from config import SMTP_CONFIG, OTP_EXPIRY_MINUTES, OTP_LENGTH
 import mysql.connector
 from config import DB_CONFIG
+import os
 
 
 def generate_otp(length=OTP_LENGTH):
@@ -19,7 +21,7 @@ def generate_otp(length=OTP_LENGTH):
 
 def send_otp_email(recipient_email, otp_code, username):
     """
-    Send OTP code via Gmail SMTP
+    Send OTP code via SMTP (Gmail) or SendGrid API
     
     Args:
         recipient_email: User's email address
@@ -28,6 +30,36 @@ def send_otp_email(recipient_email, otp_code, username):
     
     Returns:
         Boolean indicating success
+    """
+    # Check environment
+    is_production = os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('MYSQLHOST')
+    
+    # Try SendGrid first if API key is available
+    sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
+    if sendgrid_api_key:
+        success = send_via_sendgrid(recipient_email, otp_code, username, sendgrid_api_key)
+        if success:
+            return True
+        print("⚠️ SendGrid failed, trying SMTP...")
+    
+    # Try SMTP as fallback
+    success = send_via_smtp(recipient_email, otp_code, username)
+    
+    # In production, if both fail, log OTP for manual verification
+    if not success and is_production:
+        print(f"⚠️ ALL EMAIL METHODS FAILED IN PRODUCTION")
+        print(f"📧 User: {username} ({recipient_email})")
+        print(f"🔐 OTP Code: {otp_code}")
+        print(f"⏰ Valid for {OTP_EXPIRY_MINUTES} minutes")
+        print("💡 Account will be auto-activated as fallback")
+    
+    return success
+
+
+def send_via_smtp(recipient_email, otp_code, username):
+    """
+    Send OTP via traditional SMTP (Gmail)
+    Note: May not work on Railway due to port blocking
     """
     try:
         # Create message
@@ -105,6 +137,55 @@ PNP San Juan Team
             <p>This code will expire in <strong>{OTP_EXPIRY_MINUTES} minutes</strong>.</p>
             <p class="warning">⚠️ If you did not attempt to log in, please ignore this email or contact support immediately.</p>
             <div class="footer">
+                <p>BeSMTP server with timeout
+        server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
+        server.starttls()  # Enable TLS encryption
+        server.login(SMTP_CONFIG['username'], SMTP_CONFIG['password'])
+        
+        # Send email
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"✓ Email sent successfully via SMTP to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        print(f"✗ Error sending email via SMTP: {str(e)}")
+        return False
+
+
+def send_via_sendgrid(recipient_email, otp_code, username, api_key):
+    """
+    Send OTP via SendGrid API (works on Railway)
+    """
+    try:
+        import requests
+        
+        # Generate HTML content
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        .otp-code {{ font-size: 32px; font-weight: bold; color: #007bff; text-align: center; 
+                     padding: 20px; background-color: #f8f9fa; border-radius: 5px; letter-spacing: 5px; margin: 20px 0; }}
+        .footer {{ margin-top: 20px; font-size: 12px; color: #666; text-align: center; }}
+        .warning {{ color: #dc3545; font-size: 14px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h2>PNP San Juan - Login Verification</h2>
+            <p>Hello <strong>{username}</strong>,</p>
+            <p>Your verification code for PNP San Juan is:</p>
+            <div class="otp-code">{otp_code}</div>
+            <p>This code will expire in <strong>{OTP_EXPIRY_MINUTES} minutes</strong>.</p>
+            <p class="warning">⚠️ If you did not attempt to log in, please ignore this email or contact support immediately.</p>
+            <div class="footer">
                 <p>Best regards,<br>PNP San Juan Team</p>
             </div>
         </div>
@@ -113,11 +194,61 @@ PNP San Juan Team
 </html>
         """
         
-        # Attach both versions
-        part1 = MIMEText(text_content, 'plain')
-        part2 = MIMEText(html_content, 'html')
-        msg.attach(part1)
-        msg.attach(part2)
+        # Plain text version
+        text_content = f"""
+Hello {username},
+
+Your verification code for PNP San Juan is: {otp_code}
+
+This code will expire in {OTP_EXPIRY_MINUTES} minutes.
+
+If you did not attempt to log in, please ignore this email or contact support.
+
+Best regards,
+PNP San Juan Team
+        """
+        
+        # SendGrid API request
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "personalizations": [
+                {
+                    "to": [{"email": recipient_email}],
+                    "subject": "Your PNP San Juan Login Verification Code"
+                }
+            ],
+            "from": {
+                "email": SMTP_CONFIG['sender_email'],
+                "name": SMTP_CONFIG['sender_name']
+            },
+            "content": [
+                {
+                    "type": "text/plain",
+                    "value": text_content
+                },
+                {
+                    "type": "text/html",
+                    "value": html_content
+                }
+            ]
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        
+        if response.status_code == 202:
+            print(f"✓ Email sent successfully via SendGrid to {recipient_email}")
+            return True
+        else:
+            print(f"✗ SendGrid error: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"✗ Error sending email via SendGrid
         
         # Connect to Gmail SMTP server with timeout
         server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
