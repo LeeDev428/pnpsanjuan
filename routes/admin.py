@@ -597,6 +597,94 @@ def edit_applicant():
         conn.close()
         return {'success': False, 'message': f'Error updating applicant: {str(e)}'}
 
+@admin_bp.route('/view-all-applicants')
+@login_required
+@role_required('admin')
+def view_all_applicants():
+    """Comprehensive view of all applicants with their details and documents"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get admin profile for nav
+    cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
+    profile = cursor.fetchone()
+    
+    # Get all applicants with full details
+    cursor.execute('''
+        SELECT 
+            u.id as user_id,
+            u.email as user_email,
+            u.status as account_status,
+            u.created_at as registration_date,
+            ap.first_name,
+            ap.middle_name,
+            ap.last_name,
+            ap.suffix,
+            ap.gender,
+            ap.civil_status,
+            ap.date_of_birth,
+            ap.place_of_birth,
+            ap.citizenship,
+            ap.height_cm,
+            ap.weight_kg,
+            ap.phone,
+            ap.photo_2x2,
+            ap.government_id,
+            ap.transcript_diploma,
+            ap.eligibility_cert,
+            addr.house_no,
+            addr.street,
+            addr.barangay,
+            addr.city,
+            addr.zip_code,
+            addr.mobile_number,
+            addr.landline_number,
+            app.applicant_id,
+            app.reference_number,
+            app.status as application_status,
+            app.submission_date
+        FROM users u
+        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+        LEFT JOIN applicant_address addr ON u.id = addr.user_id
+        LEFT JOIN applicant_applications app ON u.id = app.user_id
+        WHERE u.role = 'applicant'
+        ORDER BY u.created_at DESC
+    ''')
+    applicants = cursor.fetchall()
+    
+    # For each applicant, get their education and references
+    for applicant in applicants:
+        # Get education
+        cursor.execute('''
+            SELECT level, school_name, location, year_graduated
+            FROM education
+            WHERE user_id = %s
+            ORDER BY 
+                CASE level
+                    WHEN 'primary' THEN 1
+                    WHEN 'secondary' THEN 2
+                    WHEN 'bachelor' THEN 3
+                    WHEN 'graduate' THEN 4
+                END
+        ''', (applicant['user_id'],))
+        applicant['education'] = cursor.fetchall()
+        
+        # Get character references
+        cursor.execute('''
+            SELECT reference_name, address, contact_number, relationship
+            FROM character_references
+            WHERE user_id = %s
+            LIMIT 3
+        ''', (applicant['user_id'],))
+        applicant['references'] = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/view_all_applicants.html',
+                         applicants=applicants,
+                         profile=profile)
+
 @admin_bp.route('/leave_applications')
 @login_required
 @role_required('admin')
