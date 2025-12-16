@@ -609,7 +609,17 @@ def view_all_applicants():
     cursor.execute('SELECT profile_picture FROM admin_profiles WHERE user_id = %s', (session['user_id'],))
     profile = cursor.fetchone()
     
-    # Get all applicants with full details
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+    
+    # Get total count
+    cursor.execute('SELECT COUNT(*) as total FROM users WHERE role = "applicant"')
+    total = cursor.fetchone()['total']
+    total_pages = (total + per_page - 1) // per_page
+    
+    # Get applicants with pagination
     cursor.execute('''
         SELECT 
             u.id as user_id,
@@ -649,7 +659,8 @@ def view_all_applicants():
         LEFT JOIN applicant_applications app ON u.id = app.user_id
         WHERE u.role = 'applicant'
         ORDER BY u.created_at DESC
-    ''')
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
     applicants = cursor.fetchall()
     
     # For each applicant, get their education and references
@@ -683,7 +694,11 @@ def view_all_applicants():
     
     return render_template('admin/view_all_applicants.html',
                          applicants=applicants,
-                         profile=profile)
+                         profile=profile,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         total_pages=total_pages)
 
 @admin_bp.route('/leave_applications')
 @login_required
