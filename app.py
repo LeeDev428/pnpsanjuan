@@ -1,7 +1,11 @@
 from flask import Flask, render_template
+from dotenv import load_dotenv
 from config import DB_CONFIG, SECRET_KEY
 import mysql.connector
 import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
