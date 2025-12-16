@@ -2,479 +2,693 @@
 {% block title %}All Applicants - Admin{% endblock %}
 
 {% block content %}
+<style>
+    .container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        color: #DC143C;
+        margin-bottom: 10px;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card h3 {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .number {
+        font-size: 32px;
+        font-weight: bold;
+        color: #DC143C;
+    }
+    
+    .applicants-table {
+        width: 100%;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .applicants-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .applicants-table thead {
+        background: linear-gradient(135deg, #DC143C 0%, #B11030 100%);
+        color: white;
+    }
+    
+    .applicants-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .applicants-table td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .applicants-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-submitted { background: #e3f2fd; color: #1976d2; }
+    .status-passed { background: #e8f5e9; color: #388e3c; }
+    .status-rejected { background: #ffebee; color: #d32f2f; }
+    .status-pending { background: #fff3e0; color: #f57c00; }
+    .status-no-application { background: #f5f5f5; color: #757575; }
+    
+    .btn-view-details {
+        background: linear-gradient(135deg, #DC143C 0%, #B11030 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: transform 0.2s;
+    }
+    
+    .btn-view-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 20, 60, 0.3);
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .page-btn {
+        padding: 8px 16px;
+        background: white;
+        border: 2px solid #DC143C;
+        color: #DC143C;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    
+    .page-btn:hover {
+        background: #DC143C;
+        color: white;
+    }
+    
+    .page-btn.active {
+        background: #DC143C;
+        color: white;
+    }
+    
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        overflow-y: auto;
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 2% auto;
+        padding: 0;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 1000px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #DC143C 0%, #B11030 100%);
+        color: white;
+        padding: 20px 30px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+        line-height: 1;
+    }
+    
+    .modal-body {
+        padding: 30px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .detail-section {
+        margin-bottom: 30px;
+    }
+    
+    .detail-section h3 {
+        color: #DC143C;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #DC143C;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-item .label {
+        font-weight: 600;
+        color: #666;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    .detail-item .value {
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .education-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .education-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-left: 3px solid #DC143C;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .references-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+    }
+    
+    .reference-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 14px;
+    }
+    
+    .reference-item strong {
+        font-size: 15px;
+        color: #DC143C;
+    }
+    
+    .address-small {
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .documents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .document-card {
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .document-card.uploaded {
+        background: #e8f5e9;
+        border: 2px solid #4caf50;
+    }
+    
+    .document-card.not-uploaded {
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+    }
+    
+    .document-card h4 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .document-card .btn-view {
+        background: #DC143C;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+        font-size: 18px;
+        color: #DC143C;
+    }
+    
+    .error-message {
+        text-align: center;
+        padding: 40px;
+        color: #d32f2f;
+    }
+</style>
+
 <div class="container">
     <div class="page-header">
         <h1><i class="fas fa-users-cog"></i> All Applicants</h1>
         <p>Comprehensive view of all applicants with their details and documents</p>
     </div>
 
+    <div class="stats-cards">
+        <div class="stat-card">
+            <h3>Total Applicants</h3>
+            <div class="number">{{ total }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Current Page</h3>
+            <div class="number">{{ page }} / {{ total_pages }}</div>
+        </div>
+    </div>
+
     {% if applicants %}
-        <div class="applicants-count">
-            <strong>Total Applicants:</strong> {{ applicants|length }}
-        </div>
-
-        {% for applicant in applicants %}
-        <div class="applicant-card">
-            <div class="applicant-header">
-                <div class="applicant-identity">
-                    <h2>
-                        {{ applicant.first_name }} {{ applicant.middle_name or '' }} {{ applicant.last_name }}
+    <div class="applicants-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Applicant ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                    <th>Registration Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for applicant in applicants %}
+                <tr>
+                    <td>{{ loop.index + (page - 1) * per_page }}</td>
+                    <td><strong>{{ applicant.applicant_id or '25-001' }}</strong></td>
+                    <td>
+                        {{ applicant.first_name or 'N/A' }} 
+                        {{ applicant.middle_name or '' }} 
+                        {{ applicant.last_name or 'N/A' }}
                         {% if applicant.suffix %} {{ applicant.suffix }}{% endif %}
-                    </h2>
-                    <div class="applicant-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-id-badge"></i> 
-                            <strong>Applicant ID:</strong> {{ applicant.applicant_id or 'Not Generated' }}
-                        </span>
-                        {% if applicant.reference_number %}
-                        <span class="meta-item">
-                            <i class="fas fa-hashtag"></i> 
-                            <strong>Ref:</strong> {{ applicant.reference_number }}
-                        </span>
-                        {% endif %}
-                        <span class="meta-item">
-                            <i class="fas fa-calendar"></i> 
-                            <strong>Registered:</strong> {{ applicant.registration_date.strftime('%b %d, %Y') if applicant.registration_date else 'N/A' }}
-                        </span>
-                    </div>
-                </div>
-                <div class="applicant-status">
-                    {% if applicant.application_status %}
-                        <span class="status-badge status-{{ applicant.application_status.lower().replace(' ', '-') }}">
-                            {{ applicant.application_status }}
-                        </span>
-                    {% else %}
-                        <span class="status-badge status-pending">No Application</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="applicant-details">
-                <!-- Personal Information -->
-                <div class="detail-section">
-                    <h3><i class="fas fa-user"></i> Personal Information</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="label">Gender:</span>
-                            <span class="value">{{ applicant.gender or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Civil Status:</span>
-                            <span class="value">{{ applicant.civil_status or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Date of Birth:</span>
-                            <span class="value">{{ applicant.date_of_birth.strftime('%b %d, %Y') if applicant.date_of_birth else 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Place of Birth:</span>
-                            <span class="value">{{ applicant.place_of_birth or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Citizenship:</span>
-                            <span class="value">{{ applicant.citizenship or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Height:</span>
-                            <span class="value">{{ applicant.height_cm }} cm</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Weight:</span>
-                            <span class="value">{{ applicant.weight_kg }} kg</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Information -->
-                <div class="detail-section">
-                    <h3><i class="fas fa-address-book"></i> Contact Information</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="label">Email:</span>
-                            <span class="value">{{ applicant.user_email }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Phone:</span>
-                            <span class="value">{{ applicant.phone or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Mobile:</span>
-                            <span class="value">{{ applicant.mobile_number or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="label">Landline:</span>
-                            <span class="value">{{ applicant.landline_number or 'N/A' }}</span>
-                        </div>
-                        <div class="detail-item full-width">
-                            <span class="label">Address:</span>
-                            <span class="value">
-                                {% if applicant.house_no or applicant.street %}
-                                    {{ applicant.house_no or '' }} {{ applicant.street or '' }}, 
-                                    {{ applicant.barangay or '' }}, {{ applicant.city or '' }} {{ applicant.zip_code or '' }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
+                    </td>
+                    <td>{{ applicant.user_email }}</td>
+                    <td>{{ applicant.mobile_number or applicant.phone or 'N/A' }}</td>
+                    <td>{{ applicant.barangay or 'N/A' }}, {{ applicant.city or 'N/A' }}</td>
+                    <td>
+                        {% if applicant.application_status %}
+                            <span class="status-badge status-{{ applicant.application_status.lower().replace(' ', '-') }}">
+                                {{ applicant.application_status }}
                             </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Education -->
-                {% if applicant.education %}
-                <div class="detail-section">
-                    <h3><i class="fas fa-graduation-cap"></i> Education</h3>
-                    <div class="education-list">
-                        {% for edu in applicant.education %}
-                        <div class="education-item">
-                            <strong>{{ edu.level|title }}:</strong> 
-                            {{ edu.school_name }}
-                            {% if edu.location %} - {{ edu.location }}{% endif %}
-                            {% if edu.year_graduated %} ({{ edu.year_graduated }}){% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Character References -->
-                {% if applicant.references %}
-                <div class="detail-section">
-                    <h3><i class="fas fa-users"></i> Character References</h3>
-                    <div class="references-list">
-                        {% for ref in applicant.references %}
-                        <div class="reference-item">
-                            <strong>{{ ref.reference_name }}</strong>
-                            <span>{{ ref.relationship }}</span>
-                            <span>{{ ref.contact_number }}</span>
-                            <span class="address-small">{{ ref.address }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Documents -->
-                <div class="detail-section">
-                    <h3><i class="fas fa-file-alt"></i> Submitted Documents</h3>
-                    <div class="documents-grid">
-                        <!-- 2x2 Photo -->
-                        <div class="document-item {% if applicant.photo_2x2 %}has-document{% else %}no-document{% endif %}">
-                            <i class="fas fa-portrait"></i>
-                            <span class="doc-name">2x2 Photo</span>
-                            {% if applicant.photo_2x2 %}
-                                <a href="{{ url_for('static', filename=applicant.photo_2x2) }}" target="_blank" class="btn-view-doc">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            {% else %}
-                                <span class="not-uploaded">Not Uploaded</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Government ID -->
-                        <div class="document-item {% if applicant.government_id %}has-document{% else %}no-document{% endif %}">
-                            <i class="fas fa-id-card"></i>
-                            <span class="doc-name">Government ID</span>
-                            {% if applicant.government_id %}
-                                <a href="{{ url_for('static', filename=applicant.government_id) }}" target="_blank" class="btn-view-doc">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            {% else %}
-                                <span class="not-uploaded">Not Uploaded</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Transcript/Diploma -->
-                        <div class="document-item {% if applicant.transcript_diploma %}has-document{% else %}no-document{% endif %}">
-                            <i class="fas fa-graduation-cap"></i>
-                            <span class="doc-name">Transcript/Diploma</span>
-                            {% if applicant.transcript_diploma %}
-                                <a href="{{ url_for('static', filename=applicant.transcript_diploma) }}" target="_blank" class="btn-view-doc">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            {% else %}
-                                <span class="not-uploaded">Not Uploaded</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Eligibility Certificate -->
-                        <div class="document-item {% if applicant.eligibility_cert %}has-document{% else %}no-document{% endif %}">
-                            <i class="fas fa-certificate"></i>
-                            <span class="doc-name">Eligibility Cert</span>
-                            {% if applicant.eligibility_cert %}
-                                <a href="{{ url_for('static', filename=applicant.eligibility_cert) }}" target="_blank" class="btn-view-doc">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            {% else %}
-                                <span class="not-uploaded">Not Uploaded</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        {% else %}
+                            <span class="status-badge status-no-application">No Application</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ applicant.registration_date.strftime('%b %d, %Y') if applicant.registration_date else 'N/A' }}</td>
+                    <td>
+                        <button class="btn-view-details" onclick="viewApplicantDetails({{ applicant.user_id }})">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('admin.view_all_applicants', page=page-1) }}" class="page-btn">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+        {% endif %}
+        
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+                <span class="page-btn active">{{ p }}</span>
+            {% else %}
+                <a href="{{ url_for('admin.view_all_applicants', page=p) }}" class="page-btn">{{ p }}</a>
+            {% endif %}
         {% endfor %}
-
+        
+        {% if page < total_pages %}
+            <a href="{{ url_for('admin.view_all_applicants', page=page+1) }}" class="page-btn">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
     {% else %}
-        <div class="no-data">
-            <i class="fas fa-users"></i>
-            <h3>No Applicants Found</h3>
-            <p>There are currently no registered applicants in the system.</p>
-        </div>
+    <div class="no-data">
+        <i class="fas fa-inbox"></i>
+        <p>No applicants found</p>
+    </div>
     {% endif %}
 </div>
 
-<style>
-.container {
-    padding: 30px;
+<!-- Modal for Applicant Details -->
+<div id="applicantModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user"></i> Applicant Details</h2>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewApplicantDetails(userId) {
+    const modal = document.getElementById('applicantModal');
+    const modalBody = document.getElementById('modalBody');
+    modal.style.display = 'block';
+    modalBody.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    
+    // Fetch applicant details via AJAX
+    fetch(`/admin/applicant/${userId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayApplicantDetails(data.applicant);
+            } else {
+                modalBody.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            modalBody.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error loading applicant details</div>';
+            console.error('Error:', error);
+        });
 }
 
-.page-header {
-    margin-bottom: 30px;
+function displayApplicantDetails(applicant) {
+    const modalBody = document.getElementById('modalBody');
+    
+    let html = `
+        <!-- Personal Information -->
+        <div class="detail-section">
+            <h3><i class="fas fa-user"></i> Personal Information</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="label">Full Name:</span>
+                    <span class="value">${applicant.first_name || ''} ${applicant.middle_name || ''} ${applicant.last_name || ''} ${applicant.suffix || ''}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Gender:</span>
+                    <span class="value">${applicant.gender || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Civil Status:</span>
+                    <span class="value">${applicant.civil_status || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Date of Birth:</span>
+                    <span class="value">${applicant.date_of_birth || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Place of Birth:</span>
+                    <span class="value">${applicant.place_of_birth || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Citizenship:</span>
+                    <span class="value">${applicant.citizenship || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Height:</span>
+                    <span class="value">${applicant.height_cm || 'N/A'} cm</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Weight:</span>
+                    <span class="value">${applicant.weight_kg || 'N/A'} kg</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Age:</span>
+                    <span class="value">${applicant.date_of_birth ? calculateAge(applicant.date_of_birth) : 'N/A'} years</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="detail-section">
+            <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="label">Email:</span>
+                    <span class="value">${applicant.user_email}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Phone:</span>
+                    <span class="value">${applicant.phone || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Mobile:</span>
+                    <span class="value">${applicant.mobile_number || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Landline:</span>
+                    <span class="value">${applicant.landline_number || 'N/A'}</span>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <span class="label">Complete Address:</span>
+                    <span class="value">${applicant.house_no || ''} ${applicant.street || ''}, ${applicant.barangay || ''}, ${applicant.city || ''} ${applicant.zip_code || ''}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eligibility Requirements -->  
+        <div class="detail-section">
+            <h3><i class="fas fa-certificate"></i> Eligibility Requirements</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="label">RA 1080 (Natural-born Filipino):</span>
+                    <span class="value">${applicant.ra_1080 ? '✓ Yes' : '✗ No'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">RA 6506 (Age 21-30):</span>
+                    <span class="value">${applicant.ra_6506 ? '✓ Yes' : '✗ No'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">PD 907 (Height Requirement):</span>
+                    <span class="value">${applicant.pd_907 ? '✓ Yes' : '✗ No'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">CSE Professional:</span>
+                    <span class="value">${applicant.cse_professional ? '✓ Yes' : '✗ No'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">CSC PO1:</span>
+                    <span class="value">${applicant.csc_po1 ? '✓ Yes' : '✗ No'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">NAPOLCOM Exam:</span>
+                    <span class="value">${applicant.napolcom ? '✓ Yes' : '✗ No'}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Information -->
+        <div class="detail-section">
+            <h3><i class="fas fa-gavel"></i> Background Information</h3>
+            <div class="detail-grid">
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <span class="label">Criminal Case History:</span>
+                    <span class="value">${applicant.has_criminal_case ? '⚠️ Yes' : '✓ No'}</span>
+                    ${applicant.has_criminal_case && applicant.criminal_case_details ? `<p style="margin-top:8px; padding:10px; background:#fff3cd; border-left:3px solid #ffc107; font-size:13px;">${applicant.criminal_case_details}</p>` : ''}
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <span class="label">Administrative Case:</span>
+                    <span class="value">${applicant.has_admin_case ? '⚠️ Yes' : '✓ No'}</span>
+                    ${applicant.has_admin_case && applicant.admin_case_details ? `<p style="margin-top:8px; padding:10px; background:#fff3cd; border-left:3px solid #ffc107; font-size:13px;">${applicant.admin_case_details}</p>` : ''}
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <span class="label">Previous PNP Application:</span>
+                    <span class="value">${applicant.has_previous_pnp_application ? 'Yes' : 'No'}</span>
+                    ${applicant.has_previous_pnp_application && applicant.previous_pnp_details ? `<p style="margin-top:8px; padding:10px; background:#e7f3ff; border-left:3px solid #007bff; font-size:13px;">${applicant.previous_pnp_details}</p>` : ''}
+                </div>
+            </div>
+        </div>
+
+        <!-- Education -->
+        ${applicant.education && applicant.education.length > 0 ? `
+        <div class="detail-section">
+            <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+            <div class="education-list">
+                ${applicant.education.map(edu => `
+                    <div class="education-item">
+                        <strong>${edu.level}:</strong> 
+                        ${edu.school_name}
+                        ${edu.location ? ' - ' + edu.location : ''}
+                        ${edu.year_graduated ? ' (' + edu.year_graduated + ')' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Character References -->
+        ${applicant.references && applicant.references.length > 0 ? `
+        <div class="detail-section">
+            <h3><i class="fas fa-users"></i> Character References</h3>
+            <div class="references-list">
+                ${applicant.references.map(ref => `
+                    <div class="reference-item">
+                        <strong>${ref.reference_name}</strong>
+                        <span>${ref.relationship}</span>
+                        <span>${ref.contact_number}</span>
+                        <span class="address-small">${ref.address}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Documents -->
+        <div class="detail-section">
+            <h3><i class="fas fa-file-alt"></i> Submitted Documents</h3>
+            <div class="documents-grid">
+                <div class="document-card ${applicant.photo_2x2 ? 'uploaded' : 'not-uploaded'}">
+                    <h4><i class="fas fa-portrait"></i> 2x2 Photo</h4>
+                    ${applicant.photo_2x2 ? 
+                        `<a href="/static/${applicant.photo_2x2}" target="_blank" class="btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>` : 
+                        '<span>Not Uploaded</span>'}
+                </div>
+                <div class="document-card ${applicant.government_id ? 'uploaded' : 'not-uploaded'}">
+                    <h4><i class="fas fa-id-card"></i> Government ID</h4>
+                    ${applicant.government_id ? 
+                        `<a href="/static/${applicant.government_id}" target="_blank" class="btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>` : 
+                        '<span>Not Uploaded</span>'}
+                </div>
+                <div class="document-card ${applicant.transcript_diploma ? 'uploaded' : 'not-uploaded'}">
+                    <h4><i class="fas fa-graduation-cap"></i> Transcript/Diploma</h4>
+                    ${applicant.transcript_diploma ? 
+                        `<a href="/static/${applicant.transcript_diploma}" target="_blank" class="btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>` : 
+                        '<span>Not Uploaded</span>'}
+                </div>
+                <div class="document-card ${applicant.eligibility_cert ? 'uploaded' : 'not-uploaded'}">
+                    <h4><i class="fas fa-certificate"></i> Eligibility Cert</h4>
+                    ${applicant.eligibility_cert ? 
+                        `<a href="/static/${applicant.eligibility_cert}" target="_blank" class="btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>` : 
+                        '<span>Not Uploaded</span>'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modalBody.innerHTML = html;
 }
 
-.page-header h1 {
-    font-size: 32px;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
+function closeModal() {
+    document.getElementById('applicantModal').style.display = 'none';
 }
 
-.page-header p {
-    color: #666;
-    font-size: 16px;
+// Helper function to calculate age
+function calculateAge(dateString) {
+    if (!dateString) return 'N/A';
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
 }
 
-.applicants-count {
-    background: #f8f9fa;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-bottom: 25px;
-    font-size: 16px;
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('applicantModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
 }
+</script>
 
-.applicant-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 25px;
-    overflow: hidden;
-    border: 2px solid #e0e0e0;
-}
-
-.applicant-header {
-    background: linear-gradient(135deg, #DC143C 0%, #B11030 100%);
-    color: white;
-    padding: 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.applicant-identity h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.applicant-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    font-size: 14px;
-    opacity: 0.95;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.applicant-status .status-badge {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    background: white;
-    color: #333;
-}
-
-.status-submitted { background: #e3f2fd !important; color: #1976d2 !important; }
-.status-under-review { background: #fff3e0 !important; color: #f57c00 !important; }
-.status-shortlisted { background: #f3e5f5 !important; color: #7b1fa2 !important; }
-.status-for-interview { background: #e0f7fa !important; color: #0097a7 !important; }
-.status-passed { background: #e8f5e9 !important; color: #388e3c !important; }
-.status-rejected { background: #ffebee !important; color: #c62828 !important; }
-.status-pending { background: #fff9c4 !important; color: #f57f17 !important; }
-
-.applicant-details {
-    padding: 25px;
-}
-
-.detail-section {
-    margin-bottom: 25px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.detail-section:last-child {
-    border-bottom: none;
-}
-
-.detail-section h3 {
-    font-size: 18px;
-    color: #DC143C;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-}
-
-.detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.detail-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.detail-item .label {
-    font-size: 13px;
-    color: #666;
-    font-weight: 600;
-}
-
-.detail-item .value {
-    font-size: 15px;
-    color: #333;
-}
-
-.education-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.education-item {
-    padding: 12px;
-    background: #f8f9fa;
-    border-left: 3px solid #DC143C;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.references-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
-}
-
-.reference-item {
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 14px;
-}
-
-.reference-item strong {
-    font-size: 15px;
-    color: #DC143C;
-}
-
-.address-small {
-    font-size: 12px;
-    color: #666;
-}
-
-.documents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.document-item {
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    border: 2px solid #e0e0e0;
-}
-
-.document-item.has-document {
-    background: #e8f5e9;
-    border-color: #4caf50;
-}
-
-.document-item.no-document {
-    background: #fff3e0;
-    border-color: #ff9800;
-}
-
-.document-item i {
-    font-size: 32px;
-    color: #DC143C;
-}
-
-.doc-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-}
-
-.btn-view-doc {
-    padding: 8px 16px;
-    background: #DC143C;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 13px;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-view-doc:hover {
-    background: #B11030;
-    transform: translateY(-2px);
-}
-
-.not-uploaded {
-    font-size: 12px;
-    color: #f57c00;
-    font-style: italic;
-}
-
-.no-data {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.no-data i {
-    font-size: 64px;
-    color: #e0e0e0;
-    margin-bottom: 20px;
-}
-
-.no-data h3 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-</style>
 {% endblock %}
