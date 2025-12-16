@@ -231,21 +231,7 @@ PNP San Juan Team
             return False
             
     except Exception as e:
-        print(f"✗ Error sending email via SendGrid
-        
-        # Connect to Gmail SMTP server with timeout
-        server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
-        server.starttls()  # Enable TLS encryption
-        server.login(SMTP_CONFIG['username'], SMTP_CONFIG['password'])
-        
-        # Send email
-        server.send_message(msg)
-        server.quit()
-        
-        return True
-        
-    except Exception as e:
-        print(f"Error sending email: {str(e)}")
+        print(f"✗ Error sending email via SendGrid: {str(e)}")
         return False
 
 
