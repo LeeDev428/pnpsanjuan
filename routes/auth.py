@@ -112,10 +112,7 @@ def register():
             # Generate and send OTP for registration verification
             otp_code = generate_otp()
             
-            # Check if we're in production (Railway) by checking for Railway env vars
-            import os
-            is_production = os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('MYSQLHOST')
-            
+            # Generate and send OTP for registration verification
             if store_otp(user_id, otp_code):
                 email_sent = send_otp_email(email, otp_code, username)
                 
@@ -126,23 +123,16 @@ def register():
                     session['pending_registration_email'] = email
                     flash('A verification code has been sent to your email. Please verify to complete registration.', 'success')
                     return redirect(url_for('auth.verify_registration_otp'))
-                elif is_production:
-                    # Production fallback: Auto-activate account if email fails
-                    print(f"⚠️ PRODUCTION MODE: Email failed. Auto-activating account for {username}")
-                    print(f"📧 OTP Code (for manual verification if needed): {otp_code}")
-                    
+                else:
+                    # Email failed - show error
+                    flash('Failed to send verification code. Email service is not configured. Please contact administrator.', 'error')
+                    # Delete the inactive account
                     conn = get_db_connection()
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE users SET status = %s WHERE id = %s', ('active', user_id))
+                    cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
                     conn.commit()
                     cursor.close()
                     conn.close()
-                    
-                    flash('Registration successful! Your account has been activated. You can now log in.', 'success')
-                    return redirect(url_for('auth.login'))
-                else:
-                    # Local development: Show error
-                    flash('Failed to send verification code. Please check your email configuration.', 'error')
             else:
                 flash('An error occurred. Please try again.', 'error')
                 
