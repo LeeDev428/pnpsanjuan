@@ -82,62 +82,45 @@ Best regards,
 PNP San Juan Team
         """
         
-        html_content = f"""
+        html_content = """
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }}
-        .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }}
-        .content {{
-            background-color: white;
-            padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .otp-code {{
-            font-size: 32px;
-            font-weight: bold;
-            color: #007bff;
-            text-align: center;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            letter-spacing: 5px;
-            margin: 20px 0;
-        }}
-        .footer {{
-            margin-top: 20px;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-        .warning {{
-            color: #dc3545;
-            font-size: 14px;
-        }}
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
+        .content { background-color: white; padding: 30px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .otp-code { font-size: 32px; font-weight: bold; color: #007bff; text-align: center; 
+                   padding: 20px; background-color: #f8f9fa; border-radius: 5px; letter-spacing: 5px; margin: 20px 0; }
+        .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+        .warning { color: #dc3545; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="content">
             <h2>PNP San Juan - Login Verification</h2>
-            <p>Hello <strong>{username}</strong>,</p>
+            <p>Hello <strong>""" + username + """</strong>,</p>
             <p>Your verification code for PNP San Juan is:</p>
-            <div class="otp-code">{otp_code}</div>
-            <p>This code will expire in <strong>{OTP_EXPIRY_MINUTES} minutes</strong>.</p>
+            <div class="otp-code">""" + otp_code + """</div>
+            <p>This code will expire in <strong>""" + str(OTP_EXPIRY_MINUTES) + """ minutes</strong>.</p>
             <p class="warning">⚠️ If you did not attempt to log in, please ignore this email or contact support immediately.</p>
             <div class="footer">
-                <p>BeSMTP server with timeout
+                <p>Best regards,<br>PNP San Juan Team</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        """
+        
+        # Attach both versions
+        part1 = MIMEText(text_content, 'plain')
+        part2 = MIMEText(html_content, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Connect to SMTP server with timeout
         server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
         server.starttls()  # Enable TLS encryption
         server.login(SMTP_CONFIG['username'], SMTP_CONFIG['password'])
