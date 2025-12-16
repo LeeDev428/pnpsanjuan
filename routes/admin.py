@@ -700,6 +700,114 @@ def view_all_applicants():
                          total=total,
                          total_pages=total_pages)
 
+@admin_bp.route('/applicant/<int:user_id>/details')
+@login_required
+@role_required('admin')
+def get_applicant_details(user_id):
+    """API endpoint to fetch full applicant details for modal"""
+    import json
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Get full applicant details including eligibility and background
+        cursor.execute('''
+            SELECT 
+                u.id as user_id,
+                u.email as user_email,
+                u.created_at as registration_date,
+                ap.first_name,
+                ap.middle_name,
+                ap.last_name,
+                ap.suffix,
+                ap.gender,
+                ap.civil_status,
+                ap.date_of_birth,
+                ap.place_of_birth,
+                ap.citizenship,
+                ap.height_cm,
+                ap.weight_kg,
+                ap.phone,
+                ap.photo_2x2,
+                ap.government_id,
+                ap.transcript_diploma,
+                ap.eligibility_cert,
+                addr.house_no,
+                addr.street,
+                addr.barangay,
+                addr.city,
+                addr.zip_code,
+                addr.mobile_number,
+                addr.landline_number,
+                app.applicant_id,
+                app.reference_number,
+                app.status as application_status,
+                elig.ra_1080,
+                elig.ra_6506,
+                elig.pd_907,
+                elig.cse_professional,
+                elig.csc_po1,
+                elig.napolcom,
+                bg.has_criminal_case,
+                bg.criminal_case_details,
+                bg.has_admin_case,
+                bg.admin_case_details,
+                bg.has_previous_pnp_application,
+                bg.previous_pnp_details
+            FROM users u
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            LEFT JOIN applicant_address addr ON u.id = addr.user_id
+            LEFT JOIN applicant_applications app ON u.id = app.user_id
+            LEFT JOIN applicant_eligibility elig ON u.id = elig.user_id
+            LEFT JOIN applicant_background bg ON u.id = bg.user_id
+            WHERE u.id = %s
+        ''', (user_id,))
+        
+        applicant = cursor.fetchone()
+        
+        if not applicant:
+            return json.dumps({'success': False, 'message': 'Applicant not found'}), 404
+        
+        # Get education
+        cursor.execute('''
+            SELECT level, school_name, location, year_graduated
+            FROM education
+            WHERE user_id = %s
+            ORDER BY 
+                CASE level
+                    WHEN 'primary' THEN 1
+                    WHEN 'secondary' THEN 2
+                    WHEN 'bachelor' THEN 3
+                    WHEN 'graduate' THEN 4
+                END
+        ''', (user_id,))
+        applicant['education'] = cursor.fetchall()
+        
+        # Get references
+        cursor.execute('''
+            SELECT reference_name, address, contact_number, relationship
+            FROM character_references
+            WHERE user_id = %s
+            LIMIT 3
+        ''', (user_id,))
+        applicant['references'] = cursor.fetchall()
+        
+        # Convert date objects to strings
+        if applicant.get('registration_date'):
+            applicant['registration_date'] = applicant['registration_date'].strftime('%b %d, %Y')
+        if applicant.get('date_of_birth'):
+            applicant['date_of_birth'] = applicant['date_of_birth'].strftime('%b %d, %Y')
+        
+        cursor.close()
+        conn.close()
+        
+        return json.dumps({'success': True, 'applicant': applicant}, default=str), 200, {'Content-Type': 'application/json'}
+        
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return json.dumps({'success': False, 'message': str(e)}), 500, {'Content-Type': 'application/json'}
+
 @admin_bp.route('/leave_applications')
 @login_required
 @role_required('admin')
