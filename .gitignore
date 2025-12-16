@@ -39,3 +39,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Uploads
+static/uploads/applicant/
