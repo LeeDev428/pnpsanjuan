@@ -788,6 +788,58 @@
         </div>
     </section>
 
+    <!-- Recruitment Call-to-Action -->
+    <section style="background: linear-gradient(135deg, #DC143C 0%, #B11030 100%); padding: 80px 0; text-align: center; color: white;">
+        <div class="landing-container">
+            <h2 style="font-size: 42px; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                Be one of us! Serve the country, join the PNP!
+            </h2>
+            <p style="font-size: 20px; margin-bottom: 40px; opacity: 0.95;">
+                Ready to make a difference in your community? Start your application today.
+            </p>
+            
+            <div style="display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <a href="{{ url_for('auth.register') }}" 
+                   style="background: white; color: #DC143C; padding: 18px 50px; font-size: 18px; font-weight: 600; 
+                          border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+                          transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"
+                   onmouseover="this.style.transform='translateY(-3px) scale(1.05)'; this.style.boxShadow='0 6px 25px rgba(0,0,0,0.3)';"
+                   onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)';">
+                    <i class="fas fa-check-circle"></i> Yes, I'm Ready!
+                </a>
+                
+                <a href="#services" 
+                   style="background: transparent; color: white; padding: 18px 50px; font-size: 18px; font-weight: 600; 
+                          border: 2px solid white; border-radius: 50px; text-decoration: none; display: inline-flex; 
+                          align-items: center; gap: 10px; transition: all 0.3s ease;"
+                   onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(-3px)';"
+                   onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
+                    <i class="fas fa-info-circle"></i> Learn More First
+                </a>
+            </div>
+            
+            <div style="margin-top: 50px; padding: 30px; background: rgba(0,0,0,0.2); border-radius: 15px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <h4 style="font-size: 20px; margin-bottom: 15px;">
+                    <i class="fas fa-star"></i> Why Join PNP San Juan?
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; text-align: left;">
+                    <div>
+                        <i class="fas fa-shield-alt"></i> Serve & Protect
+                    </div>
+                    <div>
+                        <i class="fas fa-heart"></i> Make a Difference
+                    </div>
+                    <div>
+                        <i class="fas fa-graduation-cap"></i> Training & Growth
+                    </div>
+                    <div>
+                        <i class="fas fa-users"></i> Join a Brotherhood
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     {% include 'partials/footer.html' %}
 </body>
