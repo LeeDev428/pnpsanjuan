@@ -827,10 +827,11 @@ def leave_applications():
     # Get all leave applications with employee details
     cursor.execute('''
         SELECT la.*,
-               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as employee_name,
+               CONCAT(IFNULL(ep.first_name, u.username), ' ', IFNULL(ep.middle_name, ''), ' ', IFNULL(ep.last_name, '')) as employee_name,
                ep.`rank`
         FROM leave_applications la
-        JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        JOIN users u ON la.employee_id = u.id
+        LEFT JOIN employee_profiles ep ON la.employee_id = ep.user_id
         ORDER BY la.applied_date DESC
         LIMIT %s OFFSET %s
     ''', (per_page, offset))
@@ -864,10 +865,11 @@ def get_leave(leave_id):
                DATE_FORMAT(la.start_date, '%b %d, %Y') as start_date_formatted,
                DATE_FORMAT(la.end_date, '%b %d, %Y') as end_date_formatted,
                DATE_FORMAT(la.applied_date, '%b %d, %Y') as applied_date_formatted,
-               CONCAT(ep.first_name, ' ', IFNULL(ep.middle_name, ''), ' ', ep.last_name) as employee_name,
+               CONCAT(IFNULL(ep.first_name, u.username), ' ', IFNULL(ep.middle_name, ''), ' ', IFNULL(ep.last_name, '')) as employee_name,
                ep.`rank`
         FROM leave_applications la
-        JOIN employee_profiles ep ON la.employee_id = ep.user_id
+        JOIN users u ON la.employee_id = u.id
+        LEFT JOIN employee_profiles ep ON la.employee_id = ep.user_id
         WHERE la.id = %s
     ''', (leave_id,))
     leave = cursor.fetchone()
