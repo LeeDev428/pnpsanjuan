@@ -1,0 +1,1053 @@
+{% extends "applicant/base.html" %}
+{% block title %}10-Step Application{% endblock %}
+
+{% block extra_css %}
+<style>
+        .application-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .progress-bar-container {
+            margin-bottom: 40px;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-number {
+            background: #007bff;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step.completed .step-number::after {
+            content: '✓';
+        }
+        
+        .step-title {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .step.active .step-title {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .form-step {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .form-step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .btn-nav {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-prev {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-next, .btn-submit {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-nav:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+        
+        .review-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .review-section h4 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        
+        .review-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        
+        .review-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .review-value {
+            color: #333;
+        }
+        
+        .certification-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .certification-box label {
+            display: flex;
+            align-items: start;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .certification-box input[type="checkbox"] {
+            margin-top: 3px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .reference-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 20px 0;
+        }
+        
+        .applicant-id {
+            font-size: 32px;
+            font-weight: bold;
+            color: #28a745;
+            margin: 10px 0;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .form-group.error input,
+        .form-group.error select,
+        .form-group.error textarea {
+            border-color: #dc3545;
+        }
+        
+        .form-group.error .error-message {
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="application-container">
+        <h1 style="text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-clipboard-list"></i> PNP San Juan Application Form
+        </h1>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Account</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Personal Info</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Address</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Eligibility</div>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Background</div>
+                </div>
+                <div class="step" data-step="6">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Education</div>
+                </div>
+                <div class="step" data-step="7">
+                    <div class="step-number">7</div>
+                    <div class="step-title">References</div>
+                </div>
+                <div class="step" data-step="8">
+                    <div class="step-number">8</div>
+                    <div class="step-title">Documents</div>
+                </div>
+                <div class="step" data-step="9">
+                    <div class="step-number">9</div>
+                    <div class="step-title">Review</div>
+                </div>
+                <div class="step" data-step="10">
+                    <div class="step-number">10</div>
+                    <div class="step-title">Submit</div>
+                </div>
+            </div>
+        </div>
+
+        <form id="application-form" method="POST" enctype="multipart/form-data" novalidate>
+            <!-- Step 1: Account Creation -->
+            <div class="form-step active" data-step="1">
+                <h3><i class="fas fa-user-plus"></i> Step 1: Account Creation</h3>
+                <p>Create your account to begin the application process.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Username <span style="color:red">*</span></label>
+                        <input type="text" name="username" class="form-control" data-required="true">
+                        <span class="error-message">Username is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span style="color:red">*</span></label>
+                        <input type="email" name="email" class="form-control" data-required="true">
+                        <span class="error-message">Valid email is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number <span style="color:red">*</span></label>
+                        <input type="tel" name="mobile_number" class="form-control" placeholder="09XX-XXX-XXXX" data-required="true">
+                        <span class="error-message">Mobile number is required</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Password <span style="color:red">*</span></label>
+                        <input type="password" name="password" class="form-control" data-required="true">
+                        <span class="error-message">Password is required</span>
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>Confirm Password <span style="color:red">*</span></label>
+                        <input type="password" name="confirm_password" class="form-control" data-required="true">
+                        <span class="error-message">Passwords must match</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Personal Information -->
+            <div class="form-step" data-step="2">
+                <h3><i class="fas fa-id-card"></i> Step 2: Personal Information</h3>
+                <p>Provide your complete personal details.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First Name <span style="color:red">*</span></label>
+                        <input type="text" name="first_name" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Middle Name</label>
+                        <input type="text" name="middle_name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name <span style="color:red">*</span></label>
+                        <input type="text" name="last_name" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Suffix (Jr., Sr., III)</label>
+                        <input type="text" name="suffix" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender <span style="color:red">*</span></label>
+                        <select name="gender" class="form-control" data-required="true">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Civil Status <span style="color:red">*</span></label>
+                        <select name="civil_status" class="form-control" data-required="true">
+                            <option value="">Select Status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Widowed">Widowed</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Separated">Separated</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth <span style="color:red">*</span></label>
+                        <input type="date" name="date_of_birth" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" name="age" class="form-control" readonly>
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>Place of Birth <span style="color:red">*</span></label>
+                        <input type="text" name="place_of_birth" class="form-control" placeholder="City, Province" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Citizenship <span style="color:red">*</span></label>
+                        <input type="text" name="citizenship" class="form-control" value="Filipino" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Height (cm) <span style="color:red">*</span></label>
+                        <input type="number" step="0.01" name="height_cm" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (kg) <span style="color:red">*</span></label>
+                        <input type="number" step="0.01" name="weight_kg" class="form-control" data-required="true">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Contact & Address -->
+            <div class="form-step" data-step="3">
+                <h3><i class="fas fa-map-marker-alt"></i> Step 3: Contact & Address</h3>
+                <p>Provide your permanent address and contact information.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>House/Unit No.</label>
+                        <input type="text" name="house_no" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Street</label>
+                        <input type="text" name="street" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Barangay <span style="color:red">*</span></label>
+                        <input type="text" name="barangay" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>City/Municipality <span style="color:red">*</span></label>
+                        <input type="text" name="city" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>ZIP Code <span style="color:red">*</span></label>
+                        <input type="text" name="zip_code" class="form-control" data-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label>Landline Number</label>
+                        <input type="tel" name="landline_number" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Eligibility -->
+            <div class="form-step" data-step="4">
+                <h3><i class="fas fa-certificate"></i> Step 4: Eligibility Requirements</h3>
+                <p>Check all eligibility requirements that apply to you.</p>
+                
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="ra_1080" id="ra_1080" value="1">
+                        <label for="ra_1080">
+                            <strong>RA 1080</strong> - I am a natural-born Filipino citizen
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="ra_6506" id="ra_6506" value="1">
+                        <label for="ra_6506">
+                            <strong>RA 6506</strong> - I am at least 21 years old but not more than 30 years old
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="pd_907" id="pd_907" value="1">
+                        <label for="pd_907">
+                            <strong>PD 907</strong> - I meet the minimum height requirement (Male: 162cm, Female: 157cm)
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="cse_professional" id="cse_professional" value="1">
+                        <label for="cse_professional">
+                            <strong>CSE Professional</strong> - I have a Civil Service Professional eligibility
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="csc_po1" id="csc_po1" value="1">
+                        <label for="csc_po1">
+                            <strong>CSC PO1</strong> - I have a CSC Police Officer 1 eligibility
+                        </label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="napolcom" id="napolcom" value="1">
+                        <label for="napolcom">
+                            <strong>NAPOLCOM Exam</strong> - I have passed the NAPOLCOM examination
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Legal/Employment Background -->
+            <div class="form-step" data-step="5">
+                <h3><i class="fas fa-gavel"></i> Step 5: Background Information</h3>
+                <p>Provide honest answers about your legal and employment history.</p>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="has_criminal_case" id="has_criminal_case" value="1">
+                        I have been charged with or convicted of a criminal offense
+                    </label>
+                    <textarea name="criminal_case_details" id="criminal_case_details" class="form-control" rows="3" placeholder="If yes, please provide details..." style="display:none; margin-top:10px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="has_admin_case" id="has_admin_case" value="1">
+                        I have been charged with an administrative case
+                    </label>
+                    <textarea name="admin_case_details" id="admin_case_details" class="form-control" rows="3" placeholder="If yes, please provide details..." style="display:none; margin-top:10px;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="has_previous_pnp_application" id="has_previous_pnp_application" value="1">
+                        I have previously applied to the PNP
+                    </label>
+                    <textarea name="previous_pnp_details" id="previous_pnp_details" class="form-control" rows="3" placeholder="If yes, please provide details (year, status, reason for rejection if applicable)..." style="display:none; margin-top:10px;"></textarea>
+                </div>
+            </div>
+
+            <!-- Step 6: Educational Information -->
+            <div class="form-step" data-step="6">
+                <h3><i class="fas fa-graduation-cap"></i> Step 6: Educational Background</h3>
+                <p>Provide information about your educational attainment.</p>
+                
+                <div id="education-container">
+                    <!-- Primary -->
+                    <div class="education-level" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Primary Education</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>School Name</label>
+                                <input type="text" name="primary_school" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="primary_location" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Year Graduated</label>
+                                <input type="number" name="primary_year" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Secondary -->
+                    <div class="education-level" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Secondary Education <span style="color:red">*</span></h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>School Name <span style="color:red">*</span></label>
+                                <input type="text" name="secondary_school" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group">
+                                <label>Location <span style="color:red">*</span></label>
+                                <input type="text" name="secondary_location" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group">
+                                <label>Year Graduated <span style="color:red">*</span></label>
+                                <input type="number" name="secondary_year" class="form-control" data-required="true">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bachelor's -->
+                    <div class="education-level" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Bachelor's Degree</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Course</label>
+                                <input type="text" name="bachelor_course" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>School Name</label>
+                                <input type="text" name="bachelor_school" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="bachelor_location" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Year Graduated</label>
+                                <input type="number" name="bachelor_year" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Graduate -->
+                    <div class="education-level" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Graduate Studies (if applicable)</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Course</label>
+                                <input type="text" name="graduate_course" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>School Name</label>
+                                <input type="text" name="graduate_school" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="graduate_location" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Year Graduated</label>
+                                <input type="number" name="graduate_year" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Character References -->
+            <div class="form-step" data-step="7">
+                <h3><i class="fas fa-users"></i> Step 7: Character References</h3>
+                <p>Provide at least 2 character references (not related to you).</p>
+                
+                <div id="references-container">
+                    <!-- Reference 1 -->
+                    <div class="reference-item" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Reference 1 <span style="color:red">*</span></h4>
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label>Full Name <span style="color:red">*</span></label>
+                                <input type="text" name="ref1_name" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label>Complete Address <span style="color:red">*</span></label>
+                                <textarea name="ref1_address" class="form-control" rows="2" data-required="true"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number <span style="color:red">*</span></label>
+                                <input type="tel" name="ref1_contact" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group">
+                                <label>Relationship</label>
+                                <input type="text" name="ref1_relationship" class="form-control" placeholder="e.g., Former Supervisor, Teacher">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reference 2 -->
+                    <div class="reference-item" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Reference 2 <span style="color:red">*</span></h4>
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label>Full Name <span style="color:red">*</span></label>
+                                <input type="text" name="ref2_name" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label>Complete Address <span style="color:red">*</span></label>
+                                <textarea name="ref2_address" class="form-control" rows="2" data-required="true"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number <span style="color:red">*</span></label>
+                                <input type="tel" name="ref2_contact" class="form-control" data-required="true">
+                            </div>
+                            <div class="form-group">
+                                <label>Relationship</label>
+                                <input type="text" name="ref2_relationship" class="form-control" placeholder="e.g., Former Supervisor, Teacher">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reference 3 (Optional) -->
+                    <div class="reference-item" style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                        <h4>Reference 3 (Optional)</h4>
+                        <div class="form-grid">
+                            <div class="form-group form-grid-full">
+                                <label>Full Name</label>
+                                <input type="text" name="ref3_name" class="form-control">
+                            </div>
+                            <div class="form-group form-grid-full">
+                                <label>Complete Address</label>
+                                <textarea name="ref3_address" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="tel" name="ref3_contact" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Relationship</label>
+                                <input type="text" name="ref3_relationship" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: Document Upload -->
+            <div class="form-step" data-step="8">
+                <h3><i class="fas fa-file-upload"></i> Step 8: Document Upload</h3>
+                <p>Upload the data-required="true" documents. All files must be in PDF or image format (JPG, PNG).</p>
+                
+                <div class="form-grid">
+                    <div class="form-group form-grid-full">
+                        <label>2x2 Photo <span style="color:red">*</span></label>
+                        <div class="file-upload-area" onclick="document.getElementById('photo_2x2').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size:48px; color:#007bff;"></i>
+                            <p>Click to upload 2x2 photo</p>
+                            <small>Max size: 5MB | Format: JPG, PNG</small>
+                            <input type="file" id="photo_2x2" name="photo_2x2" accept="image/*" data-required="true">
+                            <p class="file-name" style="margin-top:10px; color:#28a745;"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group form-grid-full">
+                        <label>Government ID <span style="color:red">*</span></label>
+                        <div class="file-upload-area" onclick="document.getElementById('government_id').click()">
+                            <i class="fas fa-id-card" style="font-size:48px; color:#007bff;"></i>
+                            <p>Click to upload Government ID</p>
+                            <small>Max size: 5MB | Format: JPG, PNG, PDF</small>
+                            <input type="file" id="government_id" name="government_id" accept="image/*,application/pdf" data-required="true">
+                            <p class="file-name" style="margin-top:10px; color:#28a745;"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group form-grid-full">
+                        <label>Transcript of Records / Diploma <span style="color:red">*</span></label>
+                        <div class="file-upload-area" onclick="document.getElementById('transcript_diploma').click()">
+                            <i class="fas fa-file-alt" style="font-size:48px; color:#007bff;"></i>
+                            <p>Click to upload Transcript/Diploma</p>
+                            <small>Max size: 10MB | Format: PDF</small>
+                            <input type="file" id="transcript_diploma" name="transcript_diploma" accept="application/pdf" data-required="true">
+                            <p class="file-name" style="margin-top:10px; color:#28a745;"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group form-grid-full">
+                        <label>Eligibility Certificate <span style="color:red">*</span></label>
+                        <div class="file-upload-area" onclick="document.getElementById('eligibility_cert').click()">
+                            <i class="fas fa-certificate" style="font-size:48px; color:#007bff;"></i>
+                            <p>Click to upload Eligibility Certificate</p>
+                            <small>Max size: 10MB | Format: PDF</small>
+                            <input type="file" id="eligibility_cert" name="eligibility_cert" accept="application/pdf" data-required="true">
+                            <p class="file-name" style="margin-top:10px; color:#28a745;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 9: Review & Confirmation -->
+            <div class="form-step" data-step="9">
+                <h3><i class="fas fa-check-double"></i> Step 9: Review & Confirmation</h3>
+                <p>Please review all information before submitting. You can go back to edit if needed.</p>
+                
+                <div id="review-summary">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="form-group">
+                    <div class="certification-box">
+                        <label>
+                            <input type="checkbox" name="certification" id="certification" data-required="true">
+                            <div>
+                                <strong>I hereby certify that:</strong>
+                                <ul style="margin:10px 0 0 30px;">
+                                    <li>All information provided in this application is true and correct to the best of my knowledge.</li>
+                                    <li>I understand that any false statement may result in the rejection of my application or termination of employment.</li>
+                                    <li>I agree to submit to any verification process required by the Philippine National Police.</li>
+                                    <li>I authorize the PNP to verify the information provided in this application.</li>
+                                </ul>
+                            </div>
+                        </label>
+                    </div>
+                    <span class="error-message">You must agree to the certification to proceed</span>
+                </div>
+            </div>
+
+            <!-- Step 10: Final Submission (Success Page) -->
+            <div class="form-step" data-step="10">
+                <div class="success-message">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>Application Submitted Successfully!</h2>
+                    <p>Your application has been received and is now under review.</p>
+                    
+                    <div class="applicant-id" id="applicant-id-display">
+                        Applicant ID: <span id="applicant-id-value"></span>
+                    </div>
+                    
+                    <div class="reference-number" id="reference-number-display">
+                        Reference Number: <span id="reference-number-value"></span>
+                    </div>
+                    
+                    <div style="margin-top:30px;">
+                        <a href="#" id="download-pdf-btn" class="btn btn-primary" style="display:inline-block; padding:15px 30px; text-decoration:none;">
+                            <i class="fas fa-download"></i> Download Application PDF
+                        </a>
+                    </div>
+                    
+                    <div style="margin-top:30px;">
+                        <a href="{{ url_for('applicant.dashboard') }}" class="btn" style="display:inline-block; padding:15px 30px; background:#6c757d; color:white; text-decoration:none;">
+                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                        </a>
+                    </div>
+                    
+                    <div style="margin-top:30px; padding:20px; background:#e7f3ff; border-radius:8px;">
+                        <h4>What's Next?</h4>
+                        <ul style="text-align:left; display:inline-block;">
+                            <li>Your application will be reviewed by our recruitment team</li>
+                            <li>You can track your application status from your dashboard</li>
+                            <li>You will receive notifications about your application progress</li>
+                            <li>Keep your contact information updated</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="form-navigation">
+                <button type="button" class="btn-nav btn-prev" id="prev-btn" style="display:none;">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button type="button" class="btn-nav btn-next" id="next-btn">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button type="submit" class="btn-nav btn-submit" id="submit-btn" style="display:none;">
+                    <i class="fas fa-paper-plane"></i> Submit Application
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // v2.0 - Fixed validation with null checks
+        let currentStep = 1;
+        const totalSteps = 10;
+
+        // Step navigation
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            const currentFormStep = document.querySelector(`.form-step[data-step="${step}"]`);
+            if (currentFormStep) currentFormStep.classList.add('active');
+            
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            const currentProgressStep = document.querySelector(`.step[data-step="${step}"]`);
+            if (currentProgressStep) currentProgressStep.classList.add('active');
+            
+            // Update completed steps
+            for (let i = 1; i < step; i++) {
+                const completedStep = document.querySelector(`.step[data-step="${i}"]`);
+                if (completedStep) completedStep.classList.add('completed');
+            }
+            
+            // Show/hide navigation buttons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (prevBtn) prevBtn.style.display = step > 1 ? 'block' : 'none';
+            if (nextBtn) nextBtn.style.display = step < 9 ? 'block' : 'none';
+            if (submitBtn) submitBtn.style.display = step === 9 ? 'block' : 'none';
+            
+            // Hide navigation on step 10 (success page)
+            if (step === 10) {
+                const formNav = document.querySelector('.form-navigation');
+                if (formNav) formNav.style.display = 'none';
+            }
+        }
+
+        // Validate current step
+        function validateStep(step) {
+            const currentStepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+            if (!currentStepEl) return true; // Step doesn't exist, skip validation
+            
+            const requiredFields = currentStepEl.querySelectorAll('[data-required="true"]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                try {
+                    const formGroup = field.closest('.form-group');
+                    
+                    // Check if field has a value
+                    let hasValue = false;
+                    if (field.type === 'checkbox') {
+                        hasValue = field.checked;
+                    } else if (field.type === 'file') {
+                        hasValue = field.files && field.files.length > 0;
+                    } else {
+                        hasValue = field.value && field.value.trim() !== '';
+                    }
+                    
+                    if (!hasValue) {
+                        if (formGroup) {
+                            formGroup.classList.add('error');
+                        }
+                        isValid = false;
+                    } else {
+                        if (formGroup) {
+                            formGroup.classList.remove('error');
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error validating field:', field, error);
+                }
+            });
+            
+            // Custom validations
+            if (step === 1) {
+                const password = document.querySelector('input[name="password"]').value;
+                const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
+                    return false;
+                }
+            }
+            
+            if (step === 9) {
+                const certification = document.getElementById('certification');
+                if (!certification.checked) {
+                    alert('You must agree to the certification statement to proceed.');
+                    return false;
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Next button
+        document.getElementById('next-btn').addEventListener('click', function() {
+            if (validateStep(currentStep)) {
+                if (currentStep === 9) {
+                    // Generate review summary before moving to step 9
+                    generateReviewSummary();
+                }
+                currentStep++;
+                showStep(currentStep);
+            } else {
+                alert('Please fill in all data-required="true" fields before proceeding.');
+            }
+        });
+
+        // Previous button
+        document.getElementById('prev-btn').addEventListener('click', function() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        // Auto-calculate age
+        document.querySelector('input[name="date_of_birth"]').addEventListener('change', function() {
+            const dob = new Date(this.value);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            document.querySelector('input[name="age"]').value = age;
+        });
+
+        // Show/hide detail fields for background checkboxes
+        document.getElementById('has_criminal_case').addEventListener('change', function() {
+            document.getElementById('criminal_case_details').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('has_admin_case').addEventListener('change', function() {
+            document.getElementById('admin_case_details').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        document.getElementById('has_previous_pnp_application').addEventListener('change', function() {
+            document.getElementById('previous_pnp_details').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // File upload preview
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const fileName = this.files[0]?.name || '';
+                const fileDisplay = this.parentElement.querySelector('.file-name');
+                if (fileName) {
+                    fileDisplay.textContent = `✓ ${fileName}`;
+                }
+            });
+        });
+
+        // Generate review summary
+        function generateReviewSummary() {
+            const formData = new FormData(document.getElementById('application-form'));
+            const reviewContainer = document.getElementById('review-summary');
+            
+            let html = '';
+            
+            // Step 1: Account
+            html += '<div class="review-section"><h4>Account Information</h4>';
+            html += `<div class="review-item"><span class="review-label">Username:</span><span class="review-value">${formData.get('username')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Email:</span><span class="review-value">${formData.get('email')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Mobile:</span><span class="review-value">${formData.get('mobile_number')}</span></div>`;
+            html += '</div>';
+            
+            // Step 2: Personal Info
+            html += '<div class="review-section"><h4>Personal Information</h4>';
+            html += `<div class="review-item"><span class="review-label">Name:</span><span class="review-value">${formData.get('first_name')} ${formData.get('middle_name')} ${formData.get('last_name')} ${formData.get('suffix')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Gender:</span><span class="review-value">${formData.get('gender')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Civil Status:</span><span class="review-value">${formData.get('civil_status')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Date of Birth:</span><span class="review-value">${formData.get('date_of_birth')} (Age: ${formData.get('age')})</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Place of Birth:</span><span class="review-value">${formData.get('place_of_birth')}</span></div>`;
+            html += `<div class="review-item"><span class="review-label">Height/Weight:</span><span class="review-value">${formData.get('height_cm')}cm / ${formData.get('weight_kg')}kg</span></div>`;
+            html += '</div>';
+            
+            // Step 3: Address
+            html += '<div class="review-section"><h4>Address Information</h4>';
+            const address = `${formData.get('house_no')} ${formData.get('street')}, ${formData.get('barangay')}, ${formData.get('city')} ${formData.get('zip_code')}`;
+            html += `<div class="review-item"><span class="review-label">Address:</span><span class="review-value">${address}</span></div>`;
+            if (formData.get('landline_number')) {
+                html += `<div class="review-item"><span class="review-label">Landline:</span><span class="review-value">${formData.get('landline_number')}</span></div>`;
+            }
+            html += '</div>';
+            
+            reviewContainer.innerHTML = html;
+        }
+
+        // Form submission
+        document.getElementById('application-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateStep(9)) {
+                return false;
+            }
+            
+            const formData = new FormData(this);
+            
+            fetch('{{ url_for("applicant.submit_application") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success page
+                    document.getElementById('applicant-id-value').textContent = data.applicant_id;
+                    document.getElementById('reference-number-value').textContent = data.reference_number;
+                    document.getElementById('download-pdf-btn').href = data.pdf_url;
+                    
+                    currentStep = 10;
+                    showStep(10);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting your application. Please try again.');
+            });
+        });
+
+        // Initialize
+        showStep(1);
+    </script>
+{% endblock %}
+
