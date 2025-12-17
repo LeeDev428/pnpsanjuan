@@ -38,7 +38,6 @@
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="suspended">Suspended</option>
-                <option value="terminated">Terminated</option>
             </select>
         </div>
         <button class="btn btn-primary" onclick="openAddUserModal()">
@@ -227,7 +226,6 @@
                     <label for="status">Status *</label>
                     <select id="status" name="status" required>
                         <option value="active">Active</option>
-                        <option value="terminated">Terminated</option>
                         <option value="inactive">Inactive</option>
                         <option value="suspended">Suspended</option>
                     </select>
@@ -325,10 +323,10 @@ function updateStatusOptions() {
     statusSelect.innerHTML = '';
     
     if (role === 'employee') {
-        // Only Active and Terminated for employees
+        // Active and Inactive for employees
         statusSelect.innerHTML = `
             <option value="active">Active</option>
-            <option value="terminated">Terminated</option>
+            <option value="inactive">Inactive</option>
         `;
     } else {
         // All statuses for admin and applicant
@@ -336,7 +334,6 @@ function updateStatusOptions() {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
             <option value="suspended">Suspended</option>
-            <option value="terminated">Terminated</option>
         `;
     }
     
