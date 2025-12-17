@@ -132,33 +132,7 @@
 
         <!-- Current Deployment Section -->
         {% if deployment %}
-        <div class="record-section">
-            <h2><i class="fas fa-map-marker-alt"></i> Current Deployment</h2>
-            <div class="deployment-card">
-                <div class="deployment-info">
-                    <div class="info-row">
-                        <label>Station:</label>
-                        <span>{{ deployment.station }}</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Unit:</label>
-                        <span>{{ deployment.unit or 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Position:</label>
-                        <span>{{ deployment.position or 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Start Date:</label>
-                        <span>{{ deployment.start_date.strftime('%B %d, %Y') if deployment.start_date else 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Status:</label>
-                        <span class="status-badge status-{{ deployment.status|lower }}">{{ deployment.status }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+     
         {% endif %}
 
         <div class="record-footer">
