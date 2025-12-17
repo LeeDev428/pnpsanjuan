@@ -37,45 +37,49 @@
         <div class="profile-info-section">
             <h2>I. General Information</h2>
             <div class="form-grid-2col">
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>First Name</label>
                     <div class="info-value" id="first_name_view">{{ profile.first_name or 'N/A' }}</div>
                     <input type="text" id="first_name" name="first_name" value="{{ profile.first_name or '' }}" style="display: none;">
                 </div>
-                <div class="info-row">
-                    <label>Unit</label>
-                    <div class="info-value" id="unit_view">{{ profile.unit or 'N/A' }}</div>
-                    <input type="text" id="unit" name="unit" value="{{ profile.unit or '' }}" style="display: none;">
-                </div>
+         
                 
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Middle Name</label>
                     <div class="info-value" id="middle_name_view">{{ profile.middle_name or 'N/A' }}</div>
                     <input type="text" id="middle_name" name="middle_name" value="{{ profile.middle_name or '' }}" style="display: none;">
                 </div>
-                <div class="info-row">
+
+                   <div class="info-row full-width">
+                    <label>Last Name</label>
+                    <div class="info-value" id="last_name_view">{{ profile.last_name or 'N/A' }}</div>
+                    <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}" style="display: none;">
+                </div>
+                
+                    <div class="info-row full-width">
+                    <label>Unit</label>
+                    <div class="info-value" id="unit_view">{{ profile.unit or 'N/A' }}</div>
+                    <input type="text" id="unit" name="unit" value="{{ profile.unit or '' }}" style="display: none;">
+                </div>
+             <div class="info-row full-width">
                     <label>Station</label>
                     <div class="info-value" id="station_view">{{ profile.station or 'N/A' }}</div>
                     <input type="text" id="station" name="station" value="{{ profile.station or '' }}" style="display: none;">
                 </div>
                 
-                <div class="info-row">
-                    <label>Last Name</label>
-                    <div class="info-value" id="last_name_view">{{ profile.last_name or 'N/A' }}</div>
-                    <input type="text" id="last_name" name="last_name" value="{{ profile.last_name or '' }}" style="display: none;">
-                </div>
-                <div class="info-row">
+          
+             <div class="info-row full-width">
                     <label>Address</label>
                     <div class="info-value" id="address_view">{{ profile.address or 'N/A' }}</div>
                     <input type="text" id="address" name="address" value="{{ profile.address or '' }}" style="display: none;">
                 </div>
                 
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Suffix</label>
                     <div class="info-value" id="suffix_view">{{ profile.suffix or 'N/A' }}</div>
                     <input type="text" id="suffix" name="suffix" value="{{ profile.suffix or '' }}" style="display: none;">
                 </div>
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Rank</label>
                     <div class="info-value" id="rank_view">{{ profile.rank or 'N/A' }}</div>
                     <input type="text" id="rank" name="rank" value="{{ profile.rank or '' }}" style="display: none;">
@@ -93,7 +97,7 @@
                     <input type="email" id="email" name="email" value="{{ user.email }}" readonly style="display: none;">
                 </div>
                 
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Gender</label>
                     <div class="info-value" id="gender_view">{{ profile.gender or 'N/A' }}</div>
                     <select id="gender" name="gender" style="display: none;">
@@ -103,18 +107,18 @@
                         <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Date of Birth</label>
                     <div class="info-value" id="date_of_birth_view">{{ profile.date_of_birth or 'N/A' }}</div>
                     <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile.date_of_birth or '' }}" style="display: none;">
                 </div>
                 
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Place of Birth</label>
                     <div class="info-value" id="place_of_birth_view">{{ profile.place_of_birth or 'N/A' }}</div>
                     <input type="text" id="place_of_birth" name="place_of_birth" value="{{ profile.place_of_birth or '' }}" style="display: none;">
                 </div>
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Religion</label>
                     <div class="info-value" id="religion_view">{{ profile.religion or 'N/A' }}</div>
                     <input type="text" id="religion" name="religion" value="{{ profile.religion or '' }}" style="display: none;">
@@ -123,12 +127,12 @@
 
             <h3>Emergency Contact:</h3>
             <div class="form-grid-2col">
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Name:</label>
                     <div class="info-value" id="emergency_contact_name_view">{{ profile.emergency_contact_name or 'N/A' }}</div>
                     <input type="text" id="emergency_contact_name" name="emergency_contact_name" value="{{ profile.emergency_contact_name or '' }}" style="display: none;">
                 </div>
-                <div class="info-row">
+             <div class="info-row full-width">
                     <label>Relationship:</label>
                     <div class="info-value" id="emergency_relationship_view">{{ profile.emergency_relationship or 'N/A' }}</div>
                     <input type="text" id="emergency_relationship" name="emergency_relationship" value="{{ profile.emergency_relationship or '' }}" style="display: none;">
