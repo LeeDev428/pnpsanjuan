@@ -373,8 +373,7 @@ def edit_user():
             (username, email, role, status, user_id)
         )
         
-        # Also update email in profile tables if changed
-        cursor.execute('UPDATE employee_profiles SET email = %s WHERE user_id = %s', (email, user_id))
+        # Also update email in profile tables if changed (only for tables that have email column)
         cursor.execute('UPDATE applicant_profiles SET email = %s WHERE user_id = %s', (email, user_id))
         cursor.execute('UPDATE admin_profiles SET email = %s WHERE user_id = %s', (email, user_id))
         
