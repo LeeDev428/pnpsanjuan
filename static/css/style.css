@@ -33,7 +33,7 @@ body {
 
 /* Navbar */
 .navbar {
-    background: var(--bg-light);
+    background: linear-gradient(135deg, #dbd0d0 0%, #d3b8b8 50%, #d4c2c2 100%);
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
     position: sticky;
