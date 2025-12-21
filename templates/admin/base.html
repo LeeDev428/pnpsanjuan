@@ -90,16 +90,43 @@
                 </a>
                 <a href="{{ url_for('admin.users') }}" class="sidebar-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
                     <i class="fas fa-users icon"></i>
-                    <span>Manage Users</span>
+                    <span>Manage Accounts</span>
                 </a>
-                <a href="{{ url_for('admin.recruitment') }}" class="sidebar-link {% if request.endpoint == 'admin.recruitment' or request.endpoint == 'admin.view_applicant' %}active{% endif %}">
-                    <i class="fas fa-user-plus icon"></i>
-                    <span>Recruitment</span>
-                </a>
-                <a href="{{ url_for('admin.view_all_applicants') }}" class="sidebar-link {% if request.endpoint == 'admin.view_all_applicants' %}active{% endif %}">
-                    <i class="fas fa-users-cog icon"></i>
-                    <span>View All Applicants</span>
-                </a>
+                
+                <!-- Employee Management Dropdown -->
+                <div class="sidebar-dropdown">
+                    <a href="#" class="sidebar-link {% if request.endpoint in ['admin.view_employees', 'admin.employee_details'] %}active{% endif %}" onclick="toggleSidebarDropdown(event, 'employees')">
+                        <i class="fas fa-user-tie icon"></i>
+                        <span>Employee Management</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="sidebar-submenu" id="employees-submenu">
+                        <a href="{{ url_for('admin.users', tab='employees') }}" class="submenu-link">
+                            <i class="fas fa-list"></i>
+                            <span>View All Employees</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Recruitment Dropdown -->
+                <div class="sidebar-dropdown">
+                    <a href="#" class="sidebar-link {% if request.endpoint in ['admin.recruitment', 'admin.view_applicant', 'admin.view_all_applicants'] %}active{% endif %}" onclick="toggleSidebarDropdown(event, 'recruitment')">
+                        <i class="fas fa-user-plus icon"></i>
+                        <span>Recruitment</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="sidebar-submenu" id="recruitment-submenu">
+                        <a href="{{ url_for('admin.recruitment') }}" class="submenu-link {% if request.endpoint == 'admin.recruitment' %}active{% endif %}">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>New Applications</span>
+                        </a>
+                        <a href="{{ url_for('admin.view_all_applicants') }}" class="submenu-link {% if request.endpoint == 'admin.view_all_applicants' %}active{% endif %}">
+                            <i class="fas fa-users-cog"></i>
+                            <span>All Applicants</span>
+                        </a>
+                    </div>
+                </div>
+                
                 <a href="{{ url_for('admin.deployment') }}" class="sidebar-link {% if request.endpoint == 'admin.deployment' %}active{% endif %}">
                     <i class="fas fa-map-marker-alt icon"></i>
                     <span>Deployment</span>
@@ -226,6 +253,56 @@
         if (panel && !panel.contains(event.target) && !btn.contains(event.target)) {
             panel.style.display = 'none';
         }
+    });
+    
+    // Sidebar dropdown functionality
+    function toggleSidebarDropdown(event, menuId) {
+        event.preventDefault();
+        const submenu = document.getElementById(menuId + '-submenu');
+        const link = event.currentTarget;
+        const icon = link.querySelector('.dropdown-icon');
+        
+        // Toggle this submenu
+        if (submenu.classList.contains('show')) {
+            submenu.classList.remove('show');
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            // Close all other submenus
+            document.querySelectorAll('.sidebar-submenu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.dropdown-icon').forEach(i => {
+                i.style.transform = 'rotate(0deg)';
+            });
+            
+            // Open this submenu
+            submenu.classList.add('show');
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+    
+    // Auto-open active dropdown on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const activeSubmenuLink = document.querySelector('.sidebar-submenu .submenu-link.active');
+        if (activeSubmenuLink) {
+            const submenu = activeSubmenuLink.closest('.sidebar-submenu');
+            const dropdown = submenu.closest('.sidebar-dropdown');
+            const dropdownLink = dropdown.querySelector('.sidebar-link');
+            const icon = dropdownLink.querySelector('.dropdown-icon');
+            submenu.classList.add('show');
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        }
+        
+        // Also auto-open if parent link is active
+        document.querySelectorAll('.sidebar-dropdown .sidebar-link.active').forEach(link => {
+            const dropdown = link.closest('.sidebar-dropdown');
+            const submenu = dropdown.querySelector('.sidebar-submenu');
+            const icon = link.querySelector('.dropdown-icon');
+            if (submenu) {
+                submenu.classList.add('show');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            }
+        });
     });
     </script>
     
@@ -404,6 +481,63 @@
         padding: 20px;
         text-align: center;
         color: #999;
+    }
+    
+    /* Sidebar Dropdown Styles */
+    .sidebar-dropdown {
+        position: relative;
+    }
+    
+    .sidebar-dropdown .sidebar-link {
+        position: relative;
+    }
+    
+    .sidebar-dropdown .dropdown-icon {
+        position: absolute;
+        right: 20px;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar-submenu {
+        max-height: 0;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.05);
+        transition: max-height 0.3s ease;
+    }
+    
+    .sidebar-submenu.show {
+        max-height: 300px;
+    }
+    
+    .submenu-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px 12px 50px;
+        color: #555;
+        text-decoration: none;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    
+    .submenu-link:hover {
+        background: rgba(211, 47, 47, 0.1);
+        color: var(--primary-red);
+        padding-left: 55px;
+    }
+    
+    .submenu-link.active {
+        background: rgba(211, 47, 47, 0.15);
+        color: var(--primary-red);
+        font-weight: 600;
+        border-left: 3px solid var(--primary-red);
+    }
+    
+    .submenu-link i {
+        margin-right: 12px;
+        font-size: 14px;
+        width: 20px;
+        text-align: center;
     }
     </style>
     
