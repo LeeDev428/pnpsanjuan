@@ -6,115 +6,241 @@
 <div class="app-status-container">
     <div class="app-status-header">
         <h1><i class="fas fa-clipboard-check"></i> My Application Status</h1>
-        <p>Track your recruitment application progress</p>
+        <p>Track your recruitment application progress through our 8-stage process</p>
     </div>
 
     {% if application %}
     <div class="status-card">
-        <div class="status-timeline">
-            <div class="timeline-item {% if application.application_status in ['Pending', 'Approved', 'Rejected'] %}completed{% endif %}">
-                <div class="timeline-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="timeline-content">
-                    <h3>Application Submitted</h3>
-                    <p>{{ application.applied_date.strftime('%B %d, %Y at %I:%M %p') if application.applied_date else 'N/A' }}</p>
-                </div>
+        <!-- Progress Bar -->
+        <div class="progress-wrapper">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
             </div>
-            
-            <div class="timeline-item {% if application.application_status in ['Approved', 'Rejected'] %}completed{% elif application.application_status == 'Pending' %}active{% endif %}">
-                <div class="timeline-icon">
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
-                <div class="timeline-content">
-                    <h3>Under Review</h3>
-                    <p>Your application is being evaluated by our team</p>
-                </div>
-            </div>
-            
-            <div class="timeline-item {% if application.application_status == 'Approved' %}completed{% elif application.application_status == 'Rejected' %}rejected{% endif %}">
-                <div class="timeline-icon">
-                    <i class="{% if application.application_status == 'Approved' %}fas fa-check-circle{% elif application.application_status == 'Rejected' %}fas fa-times-circle{% else %}fas fa-clock{% endif %}"></i>
-                </div>
-                <div class="timeline-content">
-                    <h3>{{ application.application_status }}</h3>
-                    <p>
-                        {% if application.application_status == 'Approved' %}
-                            Congratulations! Your application has been approved.
-                        {% elif application.application_status == 'Rejected' %}
-                            Unfortunately, your application was not approved at this time.
-                        {% else %}
-                            Awaiting final decision
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
+            <div class="progress-text">{{ progress_percentage }}% Complete</div>
         </div>
 
-        <div class="status-details">
-            <h2>Application Details</h2>
-            <div class="details-grid">
-                <div class="detail-item">
-                    <label>Full Name</label>
-                    <span>{{ application.first_name or 'N/A' }} {{ application.middle_name or '' }} {{ application.last_name or '' }}</span>
+        <!-- 8-Stage Timeline -->
+        <div class="status-timeline">
+            <!-- Stage 1: Application Submitted -->
+            <div class="timeline-stage {% if stage_number >= 1 %}completed{% endif %} {% if current_stage == 'SUBMITTED' %}active{% endif %}">
+                <div class="stage-number">1</div>
+                <div class="stage-icon">
+                    <i class="fas fa-file-alt"></i>
                 </div>
-                <div class="detail-item">
-                    <label>Email</label>
-                    <span>{{ application.email or 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <label>Phone Number</label>
-                    <span>{{ application.phone or 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <label>Date of Birth</label>
-                    <span>{{ application.date_of_birth.strftime('%B %d, %Y') if application.date_of_birth else 'N/A' }}</span>
-                </div>
-                <div class="detail-item full-width">
-                    <label>Address</label>
-                    <span>{{ application.address or 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <label>Application Status</label>
-                    <span class="status-badge status-{{ application.application_status|lower }}">
-                        {{ application.application_status }}
-                    </span>
-                </div>
-                <div class="detail-item">
-                    <label>Account Status</label>
-                    <span class="status-badge status-{{ application.account_status }}">
-                        {{ application.account_status }}
-                    </span>
+                <div class="stage-content">
+                    <h3>Application Submitted</h3>
+                    <p>Your application and required documents have been successfully submitted.</p>
+                    {% if application.submission_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> {{ application.submission_date.strftime('%b %d, %Y') }}</span>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="status-message">
-                {% if application.application_status == 'Pending' %}
-                    <div class="message-box info">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Your application is currently being reviewed. You will be notified via email once a decision has been made. This process typically takes 3-5 business days.</p>
-                    </div>
-                {% elif application.application_status == 'Approved' %}
-                    <div class="message-box success">
-                        <i class="fas fa-check-circle"></i>
-                        <p>Your application has been approved! Our team will contact you shortly with the next steps in the recruitment process.</p>
-                    </div>
-                {% elif application.application_status == 'Rejected' %}
-                    <div class="message-box warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>We appreciate your interest in joining PNP San Juan. While your current application was not successful, we encourage you to reapply in the future.</p>
-                    </div>
-                {% endif %}
+            <!-- Stage 2: Application Evaluation -->
+            <div class="timeline-stage {% if stage_number >= 2 %}completed{% endif %} {% if current_stage == 'UNDER REVIEW' %}active{% endif %}">
+                <div class="stage-number">2</div>
+                <div class="stage-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Application Evaluation</h3>
+                    <p>Your documents and qualifications are currently being reviewed.</p>
+                    {% if current_stage == 'UNDER REVIEW' %}
+                    <div class="status-badge badge-warning">In Progress</div>
+                    {% endif %}
+                </div>
             </div>
+
+            <!-- Stage 3: Initial Interview -->
+            <div class="timeline-stage {% if stage_number >= 3 %}completed{% endif %} {% if current_stage == 'INITIAL INTERVIEW' %}active{% endif %}">
+                <div class="stage-number">3</div>
+                <div class="stage-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Initial Interview</h3>
+                    <p>You are scheduled for an initial interview and basic assessment.</p>
+                    {% if application.interview_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> Scheduled: {{ application.interview_date.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                    {% elif current_stage == 'INITIAL INTERVIEW' %}
+                    <div class="status-badge badge-info">Awaiting Schedule</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stage 4: Medical Examination -->
+            <div class="timeline-stage {% if stage_number >= 4 %}completed{% endif %} {% if current_stage == 'MEDICAL EXAMINATION' %}active{% endif %}">
+                <div class="stage-number">4</div>
+                <div class="stage-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Medical Examination</h3>
+                    <p>You are required to complete the medical and health examinations.</p>
+                    {% if application.medical_exam_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> Scheduled: {{ application.medical_exam_date.strftime('%b %d, %Y') }}</span>
+                    {% endif %}
+                    {% if application.medical_result and application.medical_result != 'PENDING' %}
+                    <div class="status-badge badge-{{ 'success' if application.medical_result == 'PASSED' else 'danger' }}">
+                        {{ application.medical_result }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stage 5: Physical Agility Test (PAT) -->
+            <div class="timeline-stage {% if stage_number >= 5 %}completed{% endif %} {% if current_stage == 'PHYSICAL AGILITY TEST' %}active{% endif %}">
+                <div class="stage-number">5</div>
+                <div class="stage-icon">
+                    <i class="fas fa-running"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Physical Agility Test (PAT)</h3>
+                    <p>You are required to undergo and pass the physical fitness and agility assessment.</p>
+                    {% if application.pat_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> Scheduled: {{ application.pat_date.strftime('%b %d, %Y') }}</span>
+                    {% endif %}
+                    {% if application.pat_result and application.pat_result != 'PENDING' %}
+                    <div class="status-badge badge-{{ 'success' if application.pat_result == 'PASSED' else 'danger' }}">
+                        {{ application.pat_result }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stage 6: Neuro-Psychiatric Evaluation -->
+            <div class="timeline-stage {% if stage_number >= 6 %}completed{% endif %} {% if current_stage == 'NEURO-PSYCHIATRIC EVALUATION' %}active{% endif %}">
+                <div class="stage-number">6</div>
+                <div class="stage-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Neuro-Psychiatric Evaluation</h3>
+                    <p>You are screened for psychological and neurological evaluation.</p>
+                    {% if application.neuro_psych_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> Scheduled: {{ application.neuro_psych_date.strftime('%b %d, %Y') }}</span>
+                    {% endif %}
+                    {% if application.neuro_result and application.neuro_result != 'PENDING' %}
+                    <div class="status-badge badge-{{ 'success' if application.neuro_result == 'PASSED' else 'danger' }}">
+                        {{ application.neuro_result }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stage 7: Final Deliberation -->
+            <div class="timeline-stage {% if stage_number >= 7 %}completed{% endif %} {% if current_stage == 'FINAL DELIBERATION' %}active{% endif %}">
+                <div class="stage-number">7</div>
+                <div class="stage-icon">
+                    <i class="fas fa-gavel"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Final Deliberation</h3>
+                    <p>Your application is currently under final review by the selection committee.</p>
+                    {% if current_stage == 'FINAL DELIBERATION' %}
+                    <div class="status-badge badge-warning">Under Review</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stage 8: Preparation for Oath Taking -->
+            <div class="timeline-stage {% if stage_number >= 8 %}completed{% endif %} {% if current_stage == 'OATH TAKING PREPARATION' %}active{% endif %}">
+                <div class="stage-number">8</div>
+                <div class="stage-icon">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Preparation for Oath Taking</h3>
+                    <p>You have been selected and are preparing for oath-taking and onboarding.</p>
+                    {% if application.oath_date %}
+                    <span class="stage-date"><i class="far fa-calendar"></i> Scheduled: {{ application.oath_date.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                    {% endif %}
+                    {% if current_stage == 'OATH TAKING PREPARATION' %}
+                    <div class="status-badge badge-success">Congratulations!</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Rejected Status (if applicable) -->
+            {% if current_stage == 'REJECTED' %}
+            <div class="timeline-stage rejected active">
+                <div class="stage-number">X</div>
+                <div class="stage-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stage-content">
+                    <h3>Application Not Approved</h3>
+                    <p>Unfortunately, your application was not approved at this stage. You may reapply in the future.</p>
+                    {% if application.admin_notes %}
+                    <div class="admin-note">
+                        <strong>Note:</strong> {{ application.admin_notes }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Additional Information -->
+        <div class="additional-info">
+            <h2>Application Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="fas fa-hashtag"></i>
+                    <div>
+                        <label>Reference Number</label>
+                        <span>{{ application.reference_number or application.applicant_id }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-user"></i>
+                    <div>
+                        <label>Full Name</label>
+                        <span>{{ profile.first_name }} {{ profile.middle_name or '' }} {{ profile.last_name }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <label>Email</label>
+                        <span>{{ profile.email }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <div>
+                        <label>Contact Number</label>
+                        <span>{{ profile.contact_number or 'Not provided' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if application.stage_notes %}
+            <div class="notes-section">
+                <h3><i class="fas fa-sticky-note"></i> Additional Notes</h3>
+                <p>{{ application.stage_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Important Reminders -->
+        <div class="reminder-box">
+            <h3><i class="fas fa-info-circle"></i> Important Reminders</h3>
+            <ul>
+                <li>Check your email and notifications regularly for updates and schedules.</li>
+                <li>Prepare all required documents for each stage in advance.</li>
+                <li>Arrive on time for all scheduled appointments and tests.</li>
+                <li>Contact support if you have any questions or concerns about your application.</li>
+            </ul>
         </div>
     </div>
     {% else %}
     <div class="no-application">
         <i class="fas fa-inbox"></i>
         <h2>No Application Found</h2>
-        <p>You haven't submitted an application yet or your profile is incomplete.</p>
-        <a href="{{ url_for('applicant.profile') }}" class="btn-primary">
-            <i class="fas fa-user-edit"></i> Complete Your Profile
+        <p>You haven't submitted an application yet.</p>
+        <a href="{{ url_for('applicant.application_form') }}" class="btn-primary">
+            <i class="fas fa-clipboard-list"></i> Start Application (10-Step)
         </a>
     </div>
     {% endif %}
@@ -123,7 +249,7 @@
 <style>
 .app-status-container {
     padding: 20px;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -150,179 +276,317 @@
 .status-card {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     overflow: hidden;
 }
 
-.status-timeline {
-    padding: 40px 30px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-}
-
-.timeline-item {
-    display: flex;
-    gap: 20px;
-    position: relative;
-    padding-bottom: 35px;
-}
-
-.timeline-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 24px;
-    top: 50px;
-    width: 2px;
-    height: calc(100% - 20px);
-    background: #ddd;
-}
-
-.timeline-item.completed::before {
-    background: var(--primary-red);
-}
-
-.timeline-item.active .timeline-icon {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); }
-    50% { box-shadow: 0 0 0 10px rgba(243, 156, 18, 0); }
-}
-
-.timeline-item.rejected .timeline-icon {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-}
-
-.timeline-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-}
-
-.timeline-item.completed .timeline-icon {
-    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
-}
-
-.timeline-icon i {
-    font-size: 22px;
+/* Progress Bar */
+.progress-wrapper {
+    padding: 25px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
 
-.timeline-content h3 {
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Timeline Stages */
+.status-timeline {
+    padding: 40px 30px;
+    background: #f8f9fa;
+}
+
+.timeline-stage {
+    display: grid;
+    grid-template-columns: 60px 60px 1fr;
+    gap: 20px;
+    position: relative;
+    padding: 25px;
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 12px;
+    border-left: 4px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.timeline-stage:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.timeline-stage.completed {
+    border-left-color: #28a745;
+}
+
+.timeline-stage.active {
+    border-left-color: #f39c12;
+    box-shadow: 0 4px 16px rgba(243, 156, 18, 0.2);
+    animation: highlight 2s ease-in-out infinite;
+}
+
+.timeline-stage.rejected {
+    border-left-color: #dc3545;
+}
+
+@keyframes highlight {
+    0%, 100% { box-shadow: 0 4px 16px rgba(243, 156, 18, 0.2); }
+    50% { box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4); }
+}
+
+.stage-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.timeline-stage.completed .stage-number {
+    background: #28a745;
+    color: white;
+}
+
+.timeline-stage.active .stage-number {
+    background: #f39c12;
+    color: white;
+}
+
+.timeline-stage.rejected .stage-number {
+    background: #dc3545;
+    color: white;
+}
+
+.stage-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stage-icon i {
+    font-size: 22px;
+}
+
+.timeline-stage.completed .stage-icon {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.timeline-stage.active .stage-icon {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+}
+
+.timeline-stage.rejected .stage-icon {
+    background: linear-gradient(135deg, #dc3545, #c0392b);
+    color: white;
+}
+
+.stage-content h3 {
     font-size: 18px;
     color: #333;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
-.timeline-content p {
+.stage-content p {
     font-size: 14px;
     color: #666;
+    margin-bottom: 10px;
+    line-height: 1.6;
 }
 
-.status-details {
+.stage-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #495057;
+    background: #e9ecef;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.stage-date i {
+    color: var(--primary-red);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.admin-note {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+    padding: 12px;
+    margin-top: 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* Additional Info */
+.additional-info {
     padding: 30px;
+    border-top: 1px solid #e9ecef;
 }
 
-.status-details h2 {
+.additional-info h2 {
     font-size: 20px;
     color: #333;
     margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-red);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.details-grid {
+.info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-bottom: 25px;
 }
 
-.detail-item {
+.info-item {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
 }
 
-.detail-item.full-width {
-    grid-column: 1 / -1;
+.info-item i {
+    font-size: 20px;
+    color: var(--primary-red);
+    margin-top: 3px;
 }
 
-.detail-item label {
+.info-item label {
+    display: block;
     font-size: 12px;
-    color: #666;
+    color: #6c757d;
     text-transform: uppercase;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
 
-.detail-item span {
+.info-item span {
     font-size: 15px;
     color: #333;
-    padding: 10px 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
 }
 
-.message-box {
-    padding: 18px 22px;
+.notes-section {
+    background: #e7f3ff;
+    border-left: 4px solid #2196F3;
+    padding: 20px;
     border-radius: 8px;
+    margin-top: 20px;
+}
+
+.notes-section h3 {
+    font-size: 16px;
+    color: #1976d2;
+    margin-bottom: 10px;
     display: flex;
-    gap: 15px;
-    align-items: flex-start;
+    align-items: center;
+    gap: 8px;
 }
 
-.message-box i {
-    font-size: 22px;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.message-box p {
+.notes-section p {
     font-size: 14px;
+    color: #495057;
     line-height: 1.6;
     margin: 0;
 }
 
-.message-box.info {
-    background: #E3F2FD;
-    border-left: 4px solid #2196F3;
+/* Reminder Box */
+.reminder-box {
+    margin: 20px 30px 30px;
+    padding: 20px;
+    background: #fff8e1;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
 }
 
-.message-box.info i {
-    color: #2196F3;
+.reminder-box h3 {
+    font-size: 16px;
+    color: #f57c00;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.message-box.success {
-    background: #E8F5E9;
-    border-left: 4px solid #4CAF50;
+.reminder-box ul {
+    margin: 0;
+    padding-left: 20px;
 }
 
-.message-box.success i {
-    color: #4CAF50;
+.reminder-box li {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+    line-height: 1.5;
 }
 
-.message-box.warning {
-    background: #FFF3E0;
-    border-left: 4px solid #FF9800;
-}
-
-.message-box.warning i {
-    color: #FF9800;
-}
-
+/* No Application */
 .no-application {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     padding: 60px 40px;
     text-align: center;
 }
@@ -349,7 +613,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 30px;
+    padding: 14px 30px;
     background: var(--primary-red);
     color: white;
     text-decoration: none;
@@ -361,33 +625,36 @@
 .btn-primary:hover {
     background: var(--dark-red);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
-    .details-grid {
-        grid-template-columns: 1fr;
+    .timeline-stage {
+        grid-template-columns: 40px 40px 1fr;
+        gap: 12px;
+        padding: 18px;
     }
     
-    .status-timeline {
-        padding: 30px 20px;
-    }
-    
-    .timeline-item {
-        gap: 15px;
-    }
-    
-    .timeline-icon {
+    .stage-number, .stage-icon {
         width: 40px;
         height: 40px;
     }
     
-    .timeline-icon i {
+    .stage-icon i {
         font-size: 18px;
     }
     
-    .message-box {
-        flex-direction: column;
-        gap: 10px;
+    .stage-number {
+        font-size: 16px;
+    }
+    
+    .stage-content h3 {
+        font-size: 16px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>
