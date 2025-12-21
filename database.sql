@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `admin_profiles` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `admin_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `applicant_address` (
   PRIMARY KEY (`id`),
   KEY `idx_user_address` (`user_id`),
   CONSTRAINT `applicant_address_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `applicant_applications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `applicant_id` varchar(20) NOT NULL COMMENT 'Format: YY-XXX (e.g., 25-001)',
-  `status` enum('SUBMITTED','UNDER REVIEW','SHORTLISTED','FOR INTERVIEW','PASSED','REJECTED') DEFAULT 'SUBMITTED',
+  `status` enum('SUBMITTED','UNDER REVIEW','INITIAL INTERVIEW','MEDICAL EXAMINATION','PHYSICAL AGILITY TEST','NEURO-PSYCHIATRIC EVALUATION','FINAL DELIBERATION','OATH TAKING PREPARATION','REJECTED') DEFAULT 'SUBMITTED',
   `submission_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `reference_number` varchar(50) NOT NULL,
   `pdf_path` varchar(255) DEFAULT NULL COMMENT 'Path to generated PDF',
@@ -72,6 +72,15 @@ CREATE TABLE IF NOT EXISTS `applicant_applications` (
   `reviewed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `stage_notes` text COMMENT 'Admin notes for current stage',
+  `interview_date` datetime DEFAULT NULL COMMENT 'Scheduled interview date',
+  `medical_exam_date` datetime DEFAULT NULL COMMENT 'Scheduled medical exam date',
+  `pat_date` datetime DEFAULT NULL COMMENT 'Scheduled Physical Agility Test date',
+  `neuro_psych_date` datetime DEFAULT NULL COMMENT 'Scheduled Neuro-Psychiatric evaluation date',
+  `oath_date` datetime DEFAULT NULL COMMENT 'Scheduled oath taking date',
+  `medical_result` enum('PENDING','PASSED','FAILED') DEFAULT 'PENDING' COMMENT 'Medical exam result',
+  `pat_result` enum('PENDING','PASSED','FAILED') DEFAULT 'PENDING' COMMENT 'Physical Agility Test result',
+  `neuro_result` enum('PENDING','PASSED','FAILED') DEFAULT 'PENDING' COMMENT 'Neuro-Psychiatric evaluation result',
   PRIMARY KEY (`id`),
   UNIQUE KEY `applicant_id` (`applicant_id`),
   UNIQUE KEY `reference_number` (`reference_number`),
@@ -79,9 +88,10 @@ CREATE TABLE IF NOT EXISTS `applicant_applications` (
   KEY `reviewed_by` (`reviewed_by`),
   KEY `idx_applicant_id` (`applicant_id`),
   KEY `idx_status` (`status`),
+  KEY `idx_status_updated` (`status`,`updated_at`),
   CONSTRAINT `applicant_applications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `applicant_applications_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -100,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `applicant_background` (
   PRIMARY KEY (`id`),
   KEY `idx_user_background` (`user_id`),
   CONSTRAINT `applicant_background_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -119,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `applicant_eligibility` (
   PRIMARY KEY (`id`),
   KEY `idx_user_eligibility` (`user_id`),
   CONSTRAINT `applicant_eligibility_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -151,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `applicant_profiles` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `applicant_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -167,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `character_references` (
   PRIMARY KEY (`id`),
   KEY `idx_user_references` (`user_id`),
   CONSTRAINT `character_references_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -206,7 +216,7 @@ CREATE TABLE IF NOT EXISTS `education` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `education_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -254,7 +264,7 @@ CREATE TABLE IF NOT EXISTS `leave_applications` (
   PRIMARY KEY (`id`),
   KEY `employee_id` (`employee_id`),
   CONSTRAINT `leave_applications_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -272,7 +282,7 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   KEY `idx_user_read` (`user_id`,`is_read`),
   KEY `idx_created_at` (`created_at` DESC),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -288,7 +298,7 @@ CREATE TABLE IF NOT EXISTS `otp_codes` (
   KEY `idx_user_code` (`user_id`,`code`),
   KEY `idx_expires` (`expires_at`),
   CONSTRAINT `otp_codes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
@@ -306,7 +316,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 
