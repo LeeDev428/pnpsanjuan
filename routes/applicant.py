@@ -122,26 +122,57 @@ def application_status():
     cursor = conn.cursor(dictionary=True)
     
     # Get profile for nav
-    cursor.execute('SELECT profile_picture FROM applicant_profiles WHERE user_id = %s', (session['user_id'],))
+    cursor.execute('SELECT * FROM applicant_profiles WHERE user_id = %s', (session['user_id'],))
     profile = cursor.fetchone()
     
-    # Get application details
+    # Get application details with all new fields
     cursor.execute('''
-        SELECT u.status as account_status,
-               ap.first_name, ap.middle_name, ap.last_name, ap.email, ap.phone,
-               ap.address, ap.date_of_birth, ap.application_status, ap.applied_date
-        FROM users u
-        LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
-        WHERE u.id = %s
+        SELECT aa.*, ap.first_name, ap.middle_name, ap.last_name, ap.email, 
+               ap.phone as contact_number, ap.address
+        FROM applicant_applications aa
+        LEFT JOIN applicant_profiles ap ON aa.user_id = ap.user_id
+        WHERE aa.user_id = %s
+        ORDER BY aa.created_at DESC
+        LIMIT 1
     ''', (session['user_id'],))
     application = cursor.fetchone()
     
     cursor.close()
     conn.close()
     
+    # Calculate stage number and progress
+    if application:
+        stage_map = {
+            'SUBMITTED': 1,
+            'UNDER REVIEW': 2,
+            'INITIAL INTERVIEW': 3,
+            'MEDICAL EXAMINATION': 4,
+            'PHYSICAL AGILITY TEST': 5,
+            'NEURO-PSYCHIATRIC EVALUATION': 6,
+            'FINAL DELIBERATION': 7,
+            'OATH TAKING PREPARATION': 8,
+            'REJECTED': 0
+        }
+        
+        current_stage = application.get('status', 'SUBMITTED')
+        stage_number = stage_map.get(current_stage, 1)
+        
+        # Calculate progress percentage
+        if current_stage == 'REJECTED':
+            progress_percentage = 0
+        else:
+            progress_percentage = int((stage_number / 8) * 100)
+    else:
+        current_stage = None
+        stage_number = 0
+        progress_percentage = 0
+    
     return render_template('applicant/application_status.html', 
                          profile=profile,
-                         application=application)
+                         application=application,
+                         current_stage=current_stage,
+                         stage_number=stage_number,
+                         progress_percentage=progress_percentage)
 
 @applicant_bp.route('/apply', methods=['GET'])
 @login_required
