@@ -532,6 +532,19 @@ def view_applicant(user_id):
 def update_applicant_status():
     applicant_id = request.form.get('applicant_id')
     status = request.form.get('status')
+    notes = request.form.get('notes', '')
+    
+    # Optional date fields for scheduling
+    interview_date = request.form.get('interview_date')
+    medical_exam_date = request.form.get('medical_exam_date')
+    pat_date = request.form.get('pat_date')
+    neuro_psych_date = request.form.get('neuro_psych_date')
+    oath_date = request.form.get('oath_date')
+    
+    # Optional result fields
+    medical_result = request.form.get('medical_result')
+    pat_result = request.form.get('pat_result')
+    neuro_result = request.form.get('neuro_result')
     
     if not all([applicant_id, status]):
         return {'success': False, 'message': 'Missing required fields'}
@@ -540,10 +553,46 @@ def update_applicant_status():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        cursor.execute(
-            'UPDATE applicant_profiles SET application_status = %s WHERE user_id = %s',
-            (status, applicant_id)
-        )
+        # Update application status in applicant_applications table
+        update_query = '''
+            UPDATE applicant_applications 
+            SET status = %s,
+                stage_notes = %s,
+                interview_date = %s,
+                medical_exam_date = %s,
+                pat_date = %s,
+                neuro_psych_date = %s,
+                oath_date = %s,
+                medical_result = %s,
+                pat_result = %s,
+                neuro_result = %s,
+                updated_at = NOW()
+            WHERE user_id = %s
+        '''
+        
+        cursor.execute(update_query, (
+            status, notes,
+            interview_date if interview_date else None,
+            medical_exam_date if medical_exam_date else None,
+            pat_date if pat_date else None,
+            neuro_psych_date if neuro_psych_date else None,
+            oath_date if oath_date else None,
+            medical_result if medical_result else 'PENDING',
+            pat_result if pat_result else 'PENDING',
+            neuro_result if neuro_result else 'PENDING',
+            applicant_id
+        ))
+        
+        # Also create notification for the applicant
+        cursor.execute('''
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, 'applicant')
+        ''', (
+            applicant_id,
+            f'Application Status Update',
+            f'Your application status has been updated to: {status}. {notes if notes else ""}'
+        ))
+        
         conn.commit()
         cursor.close()
         conn.close()
