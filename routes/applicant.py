@@ -578,3 +578,80 @@ def documents():
     return render_template('applicant/documents.html', 
                          profile=profile,
                          has_documents=has_documents)
+@applicant_bp.route('/notifications/get')
+@login_required
+@role_required('applicant')
+def get_notifications():
+    """Get recent notifications for applicant"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT id, title, message, type, related_id, is_read, created_at
+            FROM notifications
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 50
+        ''', (session['user_id'],))
+        
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True, 'notifications': notifications}
+    
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e), 'notifications': []}
+
+@applicant_bp.route('/notifications/<int:notif_id>/read', methods=['POST'])
+@login_required
+@role_required('applicant')
+def mark_notification_read(notif_id):
+    """Mark a single notification as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE id = %s AND user_id = %s',
+            (notif_id, session['user_id'])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
+
+@applicant_bp.route('/notifications/read-all', methods=['POST'])
+@login_required
+@role_required('applicant')
+def mark_all_notifications_read():
+    """Mark all notifications as read"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE user_id = %s AND is_read = FALSE',
+            (session['user_id'],)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return {'success': True}
+    
+    except Exception as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return {'success': False, 'message': str(e)}
