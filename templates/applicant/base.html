@@ -78,6 +78,19 @@
                 <h3>Applicant Portal</h3>
             </div>
             <nav class="sidebar-nav">
+                {% set form_completed = session.get('form_completed', False) %}
+                
+                <!-- Application Form - Always accessible -->
+                <a href="{{ url_for('applicant.application_form') }}" class="sidebar-link {% if request.endpoint == 'applicant.application_form' %}active{% endif %} {% if not form_completed %}highlight-required{% endif %}">
+                    <i class="fas fa-clipboard-list icon"></i>
+                    <span>Apply Now (10-Step)</span>
+                    {% if not form_completed %}
+                    <span class="required-badge">Required</span>
+                    {% endif %}
+                </a>
+                
+                <!-- Locked pages until form is completed -->
+                {% if form_completed %}
                 <a href="{{ url_for('applicant.dashboard') }}" class="sidebar-link {% if request.endpoint == 'applicant.dashboard' %}active{% endif %}">
                     <i class="fas fa-chart-line icon"></i>
                     <span>Dashboard</span>
@@ -90,14 +103,34 @@
                     <i class="fas fa-clipboard-check icon"></i>
                     <span>Application Status</span>
                 </a>
-                <a href="{{ url_for('applicant.application_form') }}" class="sidebar-link {% if request.endpoint == 'applicant.application_form' %}active{% endif %}">
-                    <i class="fas fa-clipboard-list icon"></i>
-                    <span>Apply Now (10-Step)</span>
-                </a>
                 <a href="{{ url_for('applicant.documents') }}" class="sidebar-link {% if request.endpoint == 'applicant.documents' %}active{% endif %}">
                     <i class="fas fa-file-alt icon"></i>
                     <span>Documents</span>
                 </a>
+                {% else %}
+                <div class="sidebar-link locked" title="Complete the application form first">
+                    <i class="fas fa-chart-line icon"></i>
+                    <span>Dashboard</span>
+                    <i class="fas fa-lock lock-icon"></i>
+                </div>
+                <div class="sidebar-link locked" title="Complete the application form first">
+                    <i class="fas fa-user icon"></i>
+                    <span>My Profile</span>
+                    <i class="fas fa-lock lock-icon"></i>
+                </div>
+                <div class="sidebar-link locked" title="Complete the application form first">
+                    <i class="fas fa-clipboard-check icon"></i>
+                    <span>Application Status</span>
+                    <i class="fas fa-lock lock-icon"></i>
+                </div>
+                <div class="sidebar-link locked" title="Complete the application form first">
+                    <i class="fas fa-file-alt icon"></i>
+                    <span>Documents</span>
+                    <i class="fas fa-lock lock-icon"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Contact Support - Always accessible -->
                 <a href="#" class="sidebar-link" onclick="openContactSupport(); return false;">
                     <i class="fas fa-headset icon"></i>
                     <span>Contact Support</span>
@@ -606,6 +639,51 @@
     textarea.form-control {
         resize: vertical;
         min-height: 100px;
+    }
+    
+    /* Locked Sidebar Links */
+    .sidebar-link.locked {
+        opacity: 0.5;
+        cursor: not-allowed;
+        position: relative;
+        pointer-events: none;
+        background: rgba(0, 0, 0, 0.02);
+    }
+    
+    .sidebar-link.locked:hover {
+        background: rgba(0, 0, 0, 0.02);
+        transform: none;
+    }
+    
+    .sidebar-link .lock-icon {
+        margin-left: auto;
+        font-size: 14px;
+        color: #999;
+    }
+    
+    .sidebar-link.highlight-required {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-left: 4px solid #ff9800;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+        }
+    }
+    
+    .required-badge {
+        background: #ff9800;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+        margin-left: auto;
     }
     </style>
     
