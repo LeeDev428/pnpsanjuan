@@ -71,6 +71,23 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
+            
+            # For applicants, check if they've completed the application form
+            if user['role'] == 'applicant':
+                conn = get_db_connection()
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute('''
+                    SELECT form_completed 
+                    FROM applicant_applications 
+                    WHERE user_id = %s 
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                ''', (user['id'],))
+                app = cursor.fetchone()
+                cursor.close()
+                conn.close()
+                session['form_completed'] = bool(app and app.get('form_completed'))
+            
             flash('Login successful!', 'success')
             
             # Redirect based on role
@@ -79,6 +96,10 @@ def login():
             elif user['role'] == 'employee':
                 return redirect(url_for('employee.dashboard'))
             else:
+                # For applicants, redirect to application form if not completed
+                if user['role'] == 'applicant' and not session.get('form_completed'):
+                    flash('Welcome! Please complete your application form to access all features.', 'info')
+                    return redirect(url_for('applicant.application_form'))
                 return redirect(url_for('applicant.dashboard'))
         else:
             flash('Invalid username or password', 'error')
