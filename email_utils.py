@@ -31,6 +31,13 @@ def send_otp_email(recipient_email, otp_code, username):
     Returns:
         Boolean indicating success
     """
+    print(f"🔧 DEBUG send_otp_email called with:")
+    print(f"   Email: {recipient_email}")
+    print(f"   OTP: {otp_code}")
+    print(f"   Username: {username}")
+    print(f"   SMTP Config Username: {SMTP_CONFIG['username']}")
+    print(f"   SMTP Config Password: {'*' * len(SMTP_CONFIG['password'])} ({len(SMTP_CONFIG['password'])} chars)")
+    
     # Check environment
     is_production = os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('MYSQLHOST')
     
@@ -43,7 +50,9 @@ def send_otp_email(recipient_email, otp_code, username):
         print("⚠️ SendGrid failed, trying SMTP...")
     
     # Try SMTP as fallback
+    print("🔧 DEBUG: Calling send_via_smtp...")
     success = send_via_smtp(recipient_email, otp_code, username)
+    print(f"🔧 DEBUG: send_via_smtp returned: {success}")
     
     # In production, if both fail, log OTP for manual verification
     if not success and is_production:
@@ -61,12 +70,15 @@ def send_via_smtp(recipient_email, otp_code, username):
     Send OTP via traditional SMTP (Gmail)
     Note: May not work on Railway due to port blocking
     """
+    print(f"🔧 DEBUG send_via_smtp: Starting SMTP connection...")
     try:
         # Create message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = 'Your PNP San Juan Login Verification Code'
         msg['From'] = f"{SMTP_CONFIG['sender_name']} <{SMTP_CONFIG['sender_email']}>"
         msg['To'] = recipient_email
+        
+        print(f"🔧 DEBUG: Email message created")
         
         # Create HTML and plain text versions
         text_content = f"""
@@ -120,10 +132,17 @@ PNP San Juan Team
         msg.attach(part1)
         msg.attach(part2)
         
+        print(f"🔧 DEBUG: Connecting to SMTP {SMTP_CONFIG['server']}:{SMTP_CONFIG['port']}")
+        
         # Connect to SMTP server with timeout
         server = smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port'], timeout=10)
+        print(f"🔧 DEBUG: SMTP connection established, starting TLS...")
+        
         server.starttls()  # Enable TLS encryption
+        print(f"🔧 DEBUG: TLS enabled, logging in...")
+        
         server.login(SMTP_CONFIG['username'], SMTP_CONFIG['password'])
+        print(f"🔧 DEBUG: Login successful, sending message...")
         
         # Send email
         server.send_message(msg)
@@ -134,6 +153,9 @@ PNP San Juan Team
         
     except Exception as e:
         print(f"✗ Error sending email via SMTP: {str(e)}")
+        print(f"✗ Exception type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
