@@ -2,15 +2,48 @@ from flask import Blueprint, render_template, request, session, flash, redirect,
 from routes.auth import login_required, role_required, get_db_connection
 from werkzeug.utils import secure_filename
 import os
+from functools import wraps
 
 applicant_bp = Blueprint('applicant', __name__, url_prefix='/applicant')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
+def form_completion_required(f):
+    """
+    Decorator to check if applicant has completed the 10-step application form.
+    Redirects to application_form if not completed.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Check if user has completed the form
+        cursor.execute('''
+            SELECT form_completed 
+            FROM applicant_applications 
+            WHERE user_id = %s 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ''', (session['user_id'],))
+        
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        # If no application exists or form not completed, redirect to application form
+        if not result or not result.get('form_completed'):
+            flash('Please complete the 10-step application form first before accessing other pages.', 'warning')
+            return redirect(url_for('applicant.application_form'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 @applicant_bp.route('/dashboard')
 @login_required
 @role_required('applicant')
+@form_completion_required
 def dashboard():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -53,6 +86,7 @@ def dashboard():
 @applicant_bp.route('/profile')
 @login_required
 @role_required('applicant')
+@form_completion_required
 def profile():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -117,6 +151,7 @@ def contact_support():
 @applicant_bp.route('/application-status')
 @login_required
 @role_required('applicant')
+@form_completion_required
 def application_status():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -441,15 +476,16 @@ def submit_application():
         # Step 10: Create Application Record
         cursor.execute('''
             INSERT INTO applicant_applications 
-            (user_id, applicant_id, status, reference_number, step_completed, is_complete)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            (user_id, applicant_id, status, reference_number, step_completed, is_complete, form_completed)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         ''', (
             user_id,
             applicant_id,
             'SUBMITTED',
             reference_number,
             10,
-            True
+            True,
+            True  # Mark form as completed
         ))
         
         application_id = cursor.lastrowid
@@ -457,6 +493,9 @@ def submit_application():
         conn.commit()
         cursor.close()
         conn.close()
+        
+        # Set session variable to indicate form is completed
+        session['form_completed'] = True
         
         # Return success response
         return json.dumps({
@@ -567,6 +606,7 @@ def download_application_pdf(app_id):
 @applicant_bp.route('/documents')
 @login_required
 @role_required('applicant')
+@form_completion_required
 def documents():
     """Display all uploaded documents"""
     conn = get_db_connection()
