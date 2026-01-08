@@ -128,10 +128,13 @@ def register():
             
             # Generate and send OTP for registration verification
             otp_code = generate_otp()
+            print(f"🔧 DEBUG: Generated OTP: {otp_code} for user {username}")
             
             # Generate and send OTP for registration verification
             if store_otp(user_id, otp_code):
+                print(f"🔧 DEBUG: OTP stored in database. Now sending email to {email}...")
                 email_sent = send_otp_email(email, otp_code, username)
+                print(f"🔧 DEBUG: Email send result: {email_sent}")
                 
                 if email_sent:
                     # Store registration info in session for OTP verification
