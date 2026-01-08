@@ -237,11 +237,17 @@
     {% else %}
     <div class="no-application">
         <i class="fas fa-inbox"></i>
-        <h2>No Application Found</h2>
-        <p>You haven't submitted an application yet.</p>
-        <a href="{{ url_for('applicant.application_form') }}" class="btn-primary">
-            <i class="fas fa-clipboard-list"></i> Start Application (10-Step)
-        </a>
+        <h2>No Application Status Available</h2>
+        <p>Your application form has been completed, but the status is not yet available.</p>
+        <p class="sub-text">Please wait for the admin to process your application. You will be notified once your application enters the evaluation stage.</p>
+        <div class="action-buttons">
+            <a href="{{ url_for('applicant.dashboard') }}" class="btn-secondary">
+                <i class="fas fa-home"></i> Go to Dashboard
+            </a>
+            <a href="{{ url_for('applicant.documents') }}" class="btn-secondary">
+                <i class="fas fa-file-alt"></i> View Documents
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>
@@ -606,10 +612,23 @@
 .no-application p {
     font-size: 15px;
     color: #666;
+    margin-bottom: 15px;
+}
+
+.no-application .sub-text {
+    font-size: 14px;
+    color: #999;
     margin-bottom: 25px;
 }
 
-.btn-primary {
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -622,10 +641,20 @@
     transition: all 0.3s ease;
 }
 
+.btn-secondary {
+    background: #6c757d;
+}
+
 .btn-primary:hover {
     background: var(--dark-red);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
 /* Responsive */
