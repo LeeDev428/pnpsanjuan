@@ -34,8 +34,8 @@ Thumbs.db
 .env
 .env.local
 
-# Sensitive config (uncomment if storing passwords)
-# config.py
+# Sensitive config (contains email credentials)
+config.py
 
 # Logs
 *.log
